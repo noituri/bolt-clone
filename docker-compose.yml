@@ -1,0 +1,18 @@
+services:
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: auth-login-service/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_PATH=/data/database.sqlite
+      - JWT_SECRET=your-secret-key
+      - NODE_ENV=production
+    volumes:
+      - db-data:/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
