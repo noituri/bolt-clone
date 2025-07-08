@@ -1,3 +1,4 @@
+version: '3.8'
 services:
   auth-service:
     build:
@@ -12,6 +13,22 @@ services:
       - NODE_ENV=production
     volumes:
       - db-data:/data
+    restart: unless-stopped
+
+  ride-service:
+    build:
+      context: ./backend
+      dockerfile: ride-service/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - DATABASE_PATH=/data/database.sqlite
+      - NODE_ENV=production
+    volumes:
+      - db-data:/data
+    depends_on:
+      - auth-service
     restart: unless-stopped
 
 volumes:
