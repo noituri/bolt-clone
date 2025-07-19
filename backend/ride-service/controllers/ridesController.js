@@ -1,4 +1,4 @@
-const { Ride, RideRequest, User, Driver } = require('../db-schema/models');
+const { Ride, RideRequest, User, Driver } = require('../../db-schema/models');
 const { canAccessRide, isDriver, isClient } = require('../helpers/permissions');
 
 // Helper to find the next available driver (ignoring those who already rejected)
