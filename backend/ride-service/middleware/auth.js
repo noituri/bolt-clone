@@ -13,7 +13,6 @@ module.exports = (req, res, next) => {
   }
 
   try {
-    // Validate token using the same JWT_SECRET as in auth-service
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
@@ -21,5 +20,3 @@ module.exports = (req, res, next) => {
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
-
-// TODO: Add JWT_SECRET to environment variables
