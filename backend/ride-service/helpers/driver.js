@@ -1,4 +1,4 @@
-const { RideRequest, Driver } = require('../db-schema/models');
+const { RideRequest, Driver } = require('../../db-schema/models');
 
 async function findAvailableDriver(rideId) {
     const rejectedRequests = await RideRequest.findAll({
