@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { User, sequelize } = require('db-schema');
+const { User, sequelize } = require('../db-schema/models');
 require('dotenv').config();
 
 async function initializeDatabase() {

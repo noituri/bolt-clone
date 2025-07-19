@@ -14,4 +14,4 @@ WORKDIR /app/auth-login-service
 
 EXPOSE 3000
 
-CMD ["node", "service.js"]
+CMD node service.js && node ../db-schema/seed.js
