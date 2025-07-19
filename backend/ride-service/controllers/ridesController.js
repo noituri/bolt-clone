@@ -1,27 +1,8 @@
 const { Ride, RideRequest, User, Driver } = require('../../db-schema/models');
 const { canAccessRide, isDriver, isClient } = require('../helpers/permissions');
+const { findAvailableDriver } = require('../helpers/driver');
+const { validateRideData } = require('../helpers/validation');
 
-// Helper to find the next available driver (ignoring those who already rejected)
-async function findAvailableDriver(rideId) {
-    const rejectedRequests = await RideRequest.findAll({
-        where: { ride_id: rideId, status: 'rejected' },
-        attributes: ['driver_id'],
-    });
-    const rejectedIds = rejectedRequests.map(r => r.driver_id);
-    return await Driver.findOne({
-        where: {
-            is_available: true,
-            id: { $notIn: rejectedIds },
-        }
-    });
-}
-
-const validateRideData = ({ from_address, to_address, amount }) => {
-    if (!from_address || typeof from_address !== 'string' || from_address.length < 3) return 'Invalid from_address';
-    if (!to_address || typeof to_address !== 'string' || to_address.length < 3) return 'Invalid to_address';
-    if (isNaN(amount) || amount <= 0) return 'Amount must be a positive number';
-    return null;
-};
 
 module.exports = {
     // Client requests a ride
