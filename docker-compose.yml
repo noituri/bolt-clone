@@ -6,12 +6,8 @@ services:
       dockerfile: auth-login-service/Dockerfile
     ports:
       - "3010:3010"
-    environment:
-      - PORT=3010
-      - DATABASE_PATH=/data/database.sqlite
-      - JWT_SECRET=your-secret-key
-      - NODE_ENV=production
-      - SEED_DB=1
+    env_file:
+      - ./backend/auth-login-service/.env
     volumes:
       - db-data:/data
     restart: unless-stopped
@@ -22,10 +18,8 @@ services:
       dockerfile: ride-service/Dockerfile
     ports:
       - "3001:3001"
-    environment:
-      - PORT=3001
-      - DATABASE_PATH=/data/database.sqlite
-      - NODE_ENV=production
+    env_file:
+      - ./backend/ride-service/.env
     volumes:
       - db-data:/data
     depends_on:
