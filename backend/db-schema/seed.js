@@ -98,10 +98,8 @@ async function seed() {
     }
 
     console.log('Seed completed! Example data inserted.');
-    process.exit(0);
   } catch (e) {
     console.error('Seed failed:', e);
-    process.exit(1);
   }
 }
 

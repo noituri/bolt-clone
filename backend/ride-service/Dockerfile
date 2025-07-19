@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ride-service/package.json ./
 RUN npm install
 
-COPY db-schema/ ./db-schema/
+COPY ../db-schema/ ./db-schema/
 COPY ride-service/ ./ride-service/
 
 WORKDIR /app/ride-service

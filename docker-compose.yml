@@ -5,12 +5,13 @@ services:
       context: ./backend
       dockerfile: auth-login-service/Dockerfile
     ports:
-      - "3000:3000"
+      - "3010:3010"
     environment:
-      - PORT=3000
+      - PORT=3010
       - DATABASE_PATH=/data/database.sqlite
       - JWT_SECRET=your-secret-key
       - NODE_ENV=production
+      - SEED_DB=1
     volumes:
       - db-data:/data
     restart: unless-stopped
