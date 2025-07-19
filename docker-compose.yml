@@ -26,5 +26,21 @@ services:
       - auth-service
     restart: unless-stopped
 
+  payment-service:
+    build:
+      context: ./backend
+      dockerfile: payment-service/Dockerfile
+    ports:
+      - "3002:3002"
+    env_file:
+    - ./backend/payment-service/.env
+    volumes:
+      - db-data:/data
+    depends_on:
+      - auth-service
+      - ride-service
+    restart: unless-stopped
+
+
 volumes:
   db-data:
