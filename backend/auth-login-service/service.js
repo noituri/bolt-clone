@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const { User, sequelize } = require('db-schema');
+const { User, sequelize } = require('../db-schema/models');
 require('dotenv').config();
 
 async function initializeDatabase() {
@@ -32,7 +32,7 @@ const authMiddleware = (req, res, next) => {
     }
 };
 
-app.get('/get', async (req , res) => {
+app.get('/get', async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password required' });
@@ -99,6 +99,9 @@ app.put('/users/change-password', authMiddleware, async (req, res) => {
 
 (async () => {
     await initializeDatabase();
+    if (process.env.SEED_DB === '1') {
+        require('../db-schema/seed');
+    }
     app.listen(port, () => {
         console.log(`Auth service running on port ${port}`);
     });
