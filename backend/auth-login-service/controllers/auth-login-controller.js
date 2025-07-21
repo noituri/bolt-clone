@@ -25,7 +25,7 @@ module.exports = {
 
     register: async (req, res) => {
         const { username, password, role } = req.body;
-        if (!username || !password || !['client', 'driver'].includes(role)) {
+        if (!username || !password || !['client', 'driver', 'admin'].includes(role)) {
             return res.status(400).json({ error: 'Invalid input' });
         }
         try {
