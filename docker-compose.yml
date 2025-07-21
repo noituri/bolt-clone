@@ -41,6 +41,19 @@ services:
       - ride-service
     restart: unless-stopped
 
+  user-admin-service:
+    build:
+      context: ./backend
+      dockerfile: user-admin-service/Dockerfile
+    ports:
+      - "3003:3003"
+    env_file:
+      - ./backend/user-admin-service/.env
+    volumes:
+      - db-data:/data
+    depends_on:
+      - auth-service
+    restart: unless-stopped
 
 volumes:
   db-data:
