@@ -38,3 +38,5 @@ export async function sendLoginRequest(username, password) {
   }
   return jsonResp;
 }
+
+// TODO(noituri): Add sendChangePasswordRequest

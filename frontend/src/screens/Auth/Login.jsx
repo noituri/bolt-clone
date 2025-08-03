@@ -4,10 +4,17 @@ import { useAuth } from "../../hooks/useAuth";
 import { Navigate } from "react-router";
 import { useState } from "react";
 import { sendLoginRequest } from "../../api/auth";
+import PrimaryButton from "../../components/PrimaryButton";
+import InputField from "../../components/InputField";
+import { useEffect } from "react";
 
 function Login() {
   const { user, login } = useAuth();
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.title = "Login";
+  }, []);
 
   const handleLogin = async (data) => {
     setError("");
@@ -34,21 +41,9 @@ function Login() {
         <h2 className="auth-title">Login</h2>
         {error !== "" && <p className="error-color">{error}</p>}
         <form className="auth-form" action={handleLogin}>
-          <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            className="auth-input"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="auth-input"
-          />
-          <button type="submit" className="auth-button">
-            Login
-          </button>
+          <InputField type="text" name="username" placeholder="Username" />
+          <InputField type="password" name="password" placeholder="Password" />
+          <PrimaryButton type="submit">Login</PrimaryButton>
         </form>
         <p className="login-link">
           Don't have an account? <Link to="/register">Register</Link>

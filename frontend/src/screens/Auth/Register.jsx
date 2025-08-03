@@ -8,10 +8,17 @@ import {
   sendLoginRequest,
   sendRegisterRequest,
 } from "../../api/auth";
+import PrimaryButton from "../../components/PrimaryButton";
+import InputField from "../../components/InputField";
+import { useEffect } from "react";
 
 function Register() {
   const { user, login } = useAuth();
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    document.title = "Register";
+  }, []);
 
   const handleRegister = async (data) => {
     setError("");
@@ -54,27 +61,14 @@ function Register() {
         <h2 className="auth-title">Register</h2>
         {error !== "" && <p className="error-color">{error}</p>}
         <form className="auth-form" action={handleRegister}>
-          <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            className="auth-input"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="auth-input"
-          />
-          <input
+          <InputField type="text" name="username" placeholder="Username" />
+          <InputField type="password" name="password" placeholder="Password" />
+          <InputField
             type="password"
             name="confirm-password"
             placeholder="Confirm password"
-            className="auth-input"
           />
-          <button type="submit" className="auth-button">
-            Register
-          </button>
+          <PrimaryButton type="submit">Register</PrimaryButton>
         </form>
         <p className="login-link">
           Already have an account? <Link to="/login">Login</Link>

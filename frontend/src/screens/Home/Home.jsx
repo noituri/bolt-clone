@@ -1,11 +1,16 @@
-import "./Home.css";
+import { useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import ClientHome from "./Client/ClientHome";
 
 function Home() {
-  return (
-    <>
-      <p>Home</p>
-    </>
-  );
+  // TODO: Depending on user role choose different `*Home`
+  const { user, login } = useAuth();
+
+  useEffect(() => {
+    document.title = "Register";
+  }, []);
+
+  return <ClientHome />;
 }
 
 export default Home;

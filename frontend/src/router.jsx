@@ -1,5 +1,5 @@
 import { createBrowserRouter, Outlet } from "react-router";
-import Home from "./screens/Home/Home";
+import Home from "./screens/Home/Client/ClientHome";
 import Register from "./screens/Auth/Register";
 import Login from "./screens/Auth/Login";
 import { AuthProvider } from "./hooks/useAuth";
