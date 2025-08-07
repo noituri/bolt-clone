@@ -1,3 +1,5 @@
+import { getJsonData } from "./utils";
+
 // TODO(noituri): Make it configurable via env
 const ENDPOINT = "http://localhost:3010";
 
@@ -16,10 +18,7 @@ export async function sendRegisterRequest(username, password, role) {
     }),
   });
 
-  if (!(resp.status >= 200 && resp.status <= 399)) {
-    const errResp = await resp.json();
-    throw new Error(errResp.error);
-  }
+  return await getJsonData(resp);
 }
 
 export async function sendLoginRequest(username, password) {
@@ -32,11 +31,7 @@ export async function sendLoginRequest(username, password) {
     }),
   });
 
-  const jsonResp = await resp.json();
-  if (!(resp.status >= 200 && resp.status <= 399)) {
-    throw new Error(jsonResp.error);
-  }
-  return jsonResp;
+  return await getJsonData(resp);
 }
 
 // TODO(noituri): Add sendChangePasswordRequest

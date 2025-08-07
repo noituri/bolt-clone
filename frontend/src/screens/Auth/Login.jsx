@@ -23,10 +23,8 @@ function Login() {
 
     try {
       const response = await sendLoginRequest(username, password);
-      console.log("resp", response);
       await login(response);
     } catch (e) {
-      console.log("err", e);
       setError(e.message);
     }
   };
