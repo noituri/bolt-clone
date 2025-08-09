@@ -16,12 +16,12 @@
 }
 
 .primary-navbar li {
-    padding: 5px;
+    padding: 5px 10px;
     cursor: pointer;
 }
 
-.primary-navbar li:hover {
-    color: #0c2d2a;
+.primary-navbar a {
+    color: white;
 }
 
 .primary-navbar a:hover {

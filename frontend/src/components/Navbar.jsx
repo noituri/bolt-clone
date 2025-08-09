@@ -13,7 +13,12 @@ function Navbar({ active }) {
         </li>
       </ul>
       <ul>
-        <li className={active === "Profile" && "active"}>Profile</li>
+        <li className={active === "Profile" && "active"}>
+          <Link to="/profile">Profile</Link>
+        </li>
+        <li className={active === "Ride History" && "active"}>
+          <Link to="/ride-history">Ride History</Link>
+        </li>
         <li onClick={logout}>Logout</li>
       </ul>
     </nav>
