@@ -9,7 +9,7 @@ import {
 } from "../../../api/rides";
 import { useAuth } from "../../../hooks/useAuth";
 import { useEffect } from "react";
-import { dateFormatter } from "../../../utils";
+import { dateFormatter, getUserReadableRideStatus } from "../../../utils";
 
 // TODO: Verify inputs
 // TODO: Payment
@@ -26,6 +26,7 @@ function ClientHome() {
     getActiveRide(user).then((ride) => setActiveRide(ride));
   };
 
+  // TODO: Should periodically refresh it to see if the status changed
   if (activeRide) {
     return (
       <ActiveRideScreen ride={activeRide} user={user} onCancel={onRideCancel} />
@@ -35,18 +36,6 @@ function ClientHome() {
 }
 
 function ActiveRideScreen({ ride, user, onCancel }) {
-  const getStatusText = () => {
-    if (ride.status === "pending") {
-      return "Looking for a driver";
-    } else if (ride.status === "assigned") {
-      return "Waiting for the driver to accept";
-    } else if (ride.status === "accepted") {
-      return "Your ride was accepted by the driver";
-    } else {
-      return "Unknown status: " + ride.status;
-    }
-  };
-
   const cancelRide = async () => {
     await sendCancelRideRequest(user, ride.id);
     onCancel();
@@ -59,8 +48,8 @@ function ActiveRideScreen({ ride, user, onCancel }) {
         <p>
           {ride.from_address} -&gt; {ride.to_address}{" "}
         </p>
-        <p>Requested at {dateFormatter.format(ride.requested)}</p>
-        <p>{getStatusText()}</p>
+        <p>Requested at {dateFormatter.format(new Date(ride.requested_at))}</p>
+        <p>{getUserReadableRideStatus(ride.status)}</p>
         <PrimaryButton onClick={cancelRide}>Cancel</PrimaryButton>
       </div>
     </div>
@@ -82,7 +71,6 @@ function RequestRideScreen({ user, setActiveRide }) {
         destination,
         20,
       );
-      console.log(response);
       setActiveRide(response.ride);
     } catch (e) {
       setError(e.message);

@@ -4,6 +4,7 @@ import Register from "./screens/Auth/Register";
 import Login from "./screens/Auth/Login";
 import { AuthProvider } from "./hooks/useAuth";
 import AuthorizedOnly from "./components/AuthorizedOnly";
+import RideHistory from "./screens/RideHistory/RideHistory";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         Component: Register,
+      },
+      {
+        path: "/ride-history",
+        Component: RideHistory,
       },
     ],
   },
