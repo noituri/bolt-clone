@@ -13,7 +13,7 @@ function RideHistory() {
   useEffect(() => {
     document.title = "Ride History";
     sendGetRideHistoryRequest(user).then(setHistory);
-  }, [user, setHistory]);
+  }, [user]);
 
   const historyList =
     history?.map((entry) => <HistoryEntry entry={entry} key={entry.id} />) ??
@@ -22,6 +22,7 @@ function RideHistory() {
   return (
     <>
       <Navbar active="Ride History" />
+      <h2>Ride History</h2>
       <table className="ride-history-list">
         <thead>
           <tr className="ride-history-entry">
