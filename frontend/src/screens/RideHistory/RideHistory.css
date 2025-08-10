@@ -11,6 +11,7 @@
 .ride-history-entry {
     max-width: 700px;
 }
-.ride-history-entry td {
+.ride-history-entry td,
+th {
     padding: 15px;
 }

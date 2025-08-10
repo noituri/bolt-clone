@@ -35,7 +35,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/ride-history",
-        Component: RideHistory,
+        Component: () => (
+          <AuthorizedOnly>
+            <RideHistory />
+          </AuthorizedOnly>
+        ),
       },
     ],
   },
