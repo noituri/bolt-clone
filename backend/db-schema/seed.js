@@ -6,6 +6,16 @@ async function seed() {
   try {
     await sequelize.sync({ force: true });
 
+    // Admin
+    await User.create({
+      username: 'admin',
+      password: 'admin123',
+      role: 'admin',
+      is_active: true,
+      full_name: 'Konto admina',
+      phone: '+48321123321',
+    })
+
     // Clients
     const clients = [];
     for (let i = 1; i <= 3; i++) {

@@ -6,6 +6,8 @@ import { AuthProvider } from "./hooks/useAuth";
 import AuthorizedOnly from "./components/AuthorizedOnly";
 import RideHistory from "./screens/RideHistory/RideHistory";
 import Profile from "./screens/Profile/Profile";
+import AdminOnly from "./components/AdminOnly";
+import Users from "./screens/Users/Users";
 
 const router = createBrowserRouter([
   {
@@ -48,6 +50,14 @@ const router = createBrowserRouter([
           <AuthorizedOnly>
             <Profile />
           </AuthorizedOnly>
+        ),
+      },
+      {
+        path: "/users",
+        Component: () => (
+          <AdminOnly>
+            <Users />
+          </AdminOnly>
         ),
       },
     ],

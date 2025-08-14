@@ -12,9 +12,9 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(
     async (data) => {
-      const { id } = await sendGetProfileRequest(data);
+      const profile = await sendGetProfileRequest(data);
       setUser({
-        id,
+        profile,
         token: data.token,
       });
       await navigate("/");

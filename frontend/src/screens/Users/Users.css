@@ -1,0 +1,27 @@
+.user-list {
+    border-radius: 10px;
+    margin: 15px auto;
+    color: #000;
+    box-shadow:
+        0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    padding: 15px;
+}
+
+.user-list-entry {
+    max-width: 700px;
+    transition: 0.1s;
+    cursor: pointer;
+}
+.user-list-entry td,
+th {
+    padding: 15px;
+}
+
+.user-list-entry:hover {
+    max-width: 700px;
+    box-shadow:
+        0 4px 8px 0 rgba(0, 0, 0, 0.2),
+        0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    border-radius: 10px;
+}

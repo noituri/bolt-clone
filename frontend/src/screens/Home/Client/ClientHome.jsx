@@ -10,7 +10,6 @@ import {
 import { useAuth } from "../../../hooks/useAuth";
 import { useEffect } from "react";
 import { dateFormatter, getUserReadableRideStatus } from "../../../utils";
-import { sendCreatePaymentRequest, sendListPaymentsRequest } from "../../../api/payment";
 
 // TODO: Payment
 function ClientHome() {
