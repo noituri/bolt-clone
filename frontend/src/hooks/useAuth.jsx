@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext } from "react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import useSessionStorage from "./useSessionStorage";
+import { sendGetProfileRequest } from "../api/user";
 
 const AuthContext = createContext();
 
@@ -11,7 +12,11 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(
     async (data) => {
-      setUser(data);
+      const { id } = await sendGetProfileRequest(data);
+      setUser({
+        id,
+        token: data.token,
+      });
       await navigate("/");
     },
     [navigate, setUser],

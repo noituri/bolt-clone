@@ -10,15 +10,19 @@ import {
 import { useAuth } from "../../../hooks/useAuth";
 import { useEffect } from "react";
 import { dateFormatter, getUserReadableRideStatus } from "../../../utils";
+import { sendCreatePaymentRequest, sendListPaymentsRequest } from "../../../api/payment";
 
-// TODO: Verify inputs
 // TODO: Payment
 function ClientHome() {
   const { user } = useAuth();
   const [activeRide, setActiveRide] = useState();
 
   useEffect(() => {
-    getActiveRide(user).then((ride) => setActiveRide(ride));
+    const interval = setInterval(() => {
+      getActiveRide(user).then((ride) => setActiveRide(ride));
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, [user]);
 
   const onRideCancel = () => {
@@ -26,7 +30,6 @@ function ClientHome() {
     getActiveRide(user).then((ride) => setActiveRide(ride));
   };
 
-  // TODO: Should periodically refresh it to see if the status changed
   if (activeRide) {
     return (
       <ActiveRideScreen ride={activeRide} user={user} onCancel={onRideCancel} />
@@ -80,12 +83,14 @@ function RequestRideScreen({ user, setActiveRide }) {
   return (
     <div className="home-container">
       <h1>Request a ride</h1>
+      {error !== "" && <p className="error-color">{error}</p>}
       <form className="" action={onRequest}>
         <div className="ride-request-form">
           <InputField placeholder="Pickup location" name="pickup" />
           <InputField placeholder="Destination" name="destination" />
         </div>
-        <PrimaryButton type="submit">Request</PrimaryButton>
+        <PrimaryButton type="submit">Request ride for
+          $20</PrimaryButton>
       </form>
     </div>
   );
