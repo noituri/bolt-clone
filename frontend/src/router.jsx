@@ -4,8 +4,10 @@ import Register from "./screens/Auth/Register";
 import Login from "./screens/Auth/Login";
 import { AuthProvider } from "./hooks/useAuth";
 import AuthorizedOnly from "./components/AuthorizedOnly";
+import AdminOnly from "./components/AdminOnly";
 import RideHistory from "./screens/RideHistory/RideHistory";
 import Profile from "./screens/Profile/Profile";
+import UserScreen from "./screens/Admin/User/UserScreen";
 
 const router = createBrowserRouter([
   {
@@ -27,15 +29,15 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/login",
+        path: "login",
         Component: Login,
       },
       {
-        path: "/register",
+        path: "register",
         Component: Register,
       },
       {
-        path: "/ride-history",
+        path: "ride-history",
         Component: () => (
           <AuthorizedOnly>
             <RideHistory />
@@ -43,13 +45,27 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "/profile",
+        path: "profile",
         Component: () => (
           <AuthorizedOnly>
             <Profile />
           </AuthorizedOnly>
         ),
       },
+      {
+        path: "admin",
+        Component: () => (
+          <AdminOnly>
+            <Outlet />
+          </AdminOnly>
+        ),
+        children: [
+          {
+            path: "user/:id",
+            Component: UserScreen,
+          }
+        ]
+      }
     ],
   },
 ]);

@@ -33,7 +33,7 @@ function Profile() {
   };
 
   useEffect(() => {
-    document.title = "Home";
+    document.title = "Profile";
     sendGetProfileRequest(user).then(syncProfileWithState);
   }, [user]);
 
@@ -60,8 +60,6 @@ function Profile() {
   if (!profile) {
     return <h1>Loading</h1>;
   }
-
-  console.log(profile);
 
   return (
     <>

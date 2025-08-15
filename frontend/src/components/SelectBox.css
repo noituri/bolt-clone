@@ -1,0 +1,33 @@
+.select-box {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  color: black;
+  margin-bottom: 15px;
+}
+
+.select-box p {
+  width: 100px;
+}
+
+.select-box select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 999px;
+  background-color: #eeeeee;
+  font-size: 16px;
+  color: #333;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.select-box select:hover {
+  background: #dddddd;
+}
+
+.select-box select:disabled {
+    background-color: #c7c7c7;
+    cursor: not-allowed;
+}

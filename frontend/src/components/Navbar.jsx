@@ -3,7 +3,7 @@ import "./Navbar.css";
 import { useAuth } from "../hooks/useAuth";
 
 function Navbar({ active }) {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <nav className="primary-navbar">
@@ -16,9 +16,11 @@ function Navbar({ active }) {
         <li className={active === "Profile" && "active"}>
           <Link to="/profile">Profile</Link>
         </li>
-        <li className={active === "Ride History" && "active"}>
-          <Link to="/ride-history">Ride History</Link>
-        </li>
+        {user.profile.role !== 'admin' && (
+          <li className={active === "Ride History" && "active"}>
+            <Link to="/ride-history">Ride History</Link>
+          </li>
+        )}
         <li onClick={logout}>Logout</li>
       </ul>
     </nav>

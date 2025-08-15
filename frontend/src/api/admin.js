@@ -46,7 +46,7 @@ export async function sendGetUserRequest(user, userId) {
 
 export async function sendUpdateUserRequest(user, userId, isActive, fullName, phone, role) {
   const resp = await fetch(`${ENDPOINT}/users/${userId}`, {
-    method: "GET",
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       authorization: `Bearer ${user.token}`,

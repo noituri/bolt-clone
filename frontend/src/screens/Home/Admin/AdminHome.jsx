@@ -4,6 +4,7 @@ import "./AdminHome.css";
 import { useAuth } from "../../../hooks/useAuth";
 import { dateFormatter } from "../../../utils";
 import { sendGetAllUsersRequest } from "../../../api/admin";
+import { useNavigate } from "react-router";
 
 function AdminHome() {
   const { user } = useAuth();
@@ -37,8 +38,9 @@ function AdminHome() {
 }
 
 function UserEntry({ entry }) {
+  const navigate = useNavigate();
   return (
-    <tr className="user-list-entry">
+    <tr className="user-list-entry" onClick={() => navigate(`/admin/user/${entry.id}`)}>
       <td>
         {entry.id}
       </td>
