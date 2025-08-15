@@ -31,8 +31,40 @@ const Ride = sequelize.define('Ride', {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+
+  // === New fields for OSRM integration ===
+  from_lat: {
+    type: DataTypes.DECIMAL(10, 7), // ~ accuracy to ~1cm
+    allowNull: false
+  },
+  from_lon: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: false
+  },
+  to_lat: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: false
+  },
+  to_lon: {
+    type: DataTypes.DECIMAL(10, 7),
+    allowNull: false
+  },
+  distance: {
+    type: DataTypes.FLOAT, // meters
+    allowNull: true
+  },
+  duration: {
+    type: DataTypes.FLOAT, // seconds
+    allowNull: true
+  },
+  geometry: {
+    type: DataTypes.TEXT, // geojson string
+    allowNull: true
+  },
+  // === End of new fields ===
+
   amount: {
-    type: DataTypes.DECIMAL(8,2),
+    type: DataTypes.DECIMAL(8, 2),
     allowNull: false
   },
   status: {

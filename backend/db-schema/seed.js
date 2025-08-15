@@ -14,7 +14,7 @@ async function seed() {
       is_active: true,
       full_name: 'Konto admina',
       phone: '+48321123321',
-    })
+    });
 
     // Clients
     const clients = [];
@@ -29,7 +29,7 @@ async function seed() {
       }));
     }
 
-    // TDrivers + details
+    // Drivers + details
     const drivers = [];
     for (let i = 1; i <= 3; i++) {
       const user = await User.create({
@@ -50,13 +50,13 @@ async function seed() {
       drivers.push(user);
     }
 
-    // rides
+    // Rides with coordinates + OSRM-like data
     const rideTemplates = [
-      { from: "Kraków, Długa 23", to: "Kraków, Rynek 1", amount: 27.5 },
-      { from: "Kraków, Grodzka 12", to: "Kraków, Zakopiańska 14", amount: 42.0 },
-      { from: "Kraków, Wielicka 100", to: "Kraków, Lubicz 1", amount: 36.8 },
-      { from: "Kraków, Pilotów 5", to: "Kraków, Bora-Komorowskiego 39", amount: 19.0 },
-      { from: "Kraków, Dietla 99", to: "Kraków, Krowoderskich Zuchów 18", amount: 24.6 }
+      { from: "Kraków, Długa 23", to: "Kraków, Rynek 1", fromLat: 50.067, fromLon: 19.94, toLat: 50.061, toLon: 19.937, distance: 1500, duration: 300 },
+      { from: "Kraków, Grodzka 12", to: "Kraków, Zakopiańska 14", fromLat: 50.061, fromLon: 19.936, toLat: 50.005, toLon: 19.945, distance: 6200, duration: 1200 },
+      { from: "Kraków, Wielicka 100", to: "Kraków, Lubicz 1", fromLat: 50.017, fromLon: 19.97, toLat: 50.066, toLon: 19.949, distance: 5700, duration: 1000 },
+      { from: "Kraków, Pilotów 5", to: "Kraków, Bora-Komorowskiego 39", fromLat: 50.082, fromLon: 19.973, toLat: 50.088, toLon: 19.995, distance: 2500, duration: 500 },
+      { from: "Kraków, Dietla 99", to: "Kraków, Krowoderskich Zuchów 18", fromLat: 50.052, fromLon: 19.947, toLat: 50.086, toLon: 19.935, distance: 4200, duration: 800 }
     ];
 
     const rides = [];
@@ -68,7 +68,14 @@ async function seed() {
         driver_id: driver.id,
         from_address: rideTemplates[i].from,
         to_address: rideTemplates[i].to,
-        amount: rideTemplates[i].amount,
+        from_lat: rideTemplates[i].fromLat,
+        from_lon: rideTemplates[i].fromLon,
+        to_lat: rideTemplates[i].toLat,
+        to_lon: rideTemplates[i].toLon,
+        distance: rideTemplates[i].distance,
+        duration: rideTemplates[i].duration,
+        geometry: null, // Można później wypełnić z OSRM
+        amount: Math.round((rideTemplates[i].distance / 1000) * 5 * 100) / 100,
         status: i % 2 === 0 ? 'completed' : 'pending',
         requested_at: dateShift(-120 + i * 15),
         accepted_at: i % 2 === 0 ? dateShift(-110 + i * 15) : null,
@@ -76,7 +83,7 @@ async function seed() {
       }));
     }
 
-    // ride requests for each "pending" ride
+    // Ride requests for each "pending" ride
     for (let ride of rides) {
       if (ride.status === 'pending') {
         for (let d of drivers) {
@@ -91,7 +98,7 @@ async function seed() {
       }
     }
 
-    // payments only for "completed" rides
+    // Payments for "completed" rides
     for (let ride of rides) {
       if (ride.status === 'completed') {
         await Payment.create({
