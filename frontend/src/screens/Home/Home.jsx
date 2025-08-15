@@ -9,6 +9,7 @@ import {
   AUTH_ROLE_CLIENT,
   AUTH_ROLE_DRIVER,
 } from "../../api/auth";
+import AdminHome from "./Admin/AdminHome";
 
 function Home() {
   const { user } = useAuth();
@@ -19,16 +20,16 @@ function Home() {
     sendGetProfileRequest(user).then(setProfile);
   }, [user]);
 
-  let homeComponent = <h1>Loading...</h1>;
+  let homeComponent = <h2>Loading...</h2>;
   if (profile) {
     if (profile.role === AUTH_ROLE_CLIENT) {
       homeComponent = <ClientHome />;
     } else if (profile.role === AUTH_ROLE_ADMIN) {
-      homeComponent = <h1>Unimplemented admin home</h1>;
+      homeComponent = <AdminHome />;
     } else if (profile.role === AUTH_ROLE_DRIVER) {
-      homeComponent = <h1>Unimplemented driver home</h1>;
+      homeComponent = <h2>Unimplemented driver home</h2>;
     } else {
-      homeComponent = <h1>Unkown user role</h1>;
+      homeComponent = <h2>Unkown user role</h2>;
     }
   }
 

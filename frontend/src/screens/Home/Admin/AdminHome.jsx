@@ -1,26 +1,22 @@
 import { useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import Navbar from "../../components/Navbar";
-import "./Users.css";
-import { sendGetAllUsersRequest } from "../../api/admin";
 import { useState } from "react";
-import { dateFormatter } from "../../utils";
+import "./AdminHome.css";
+import { useAuth } from "../../../hooks/useAuth";
+import { dateFormatter } from "../../../utils";
+import { sendGetAllUsersRequest } from "../../../api/admin";
 
-function Users() {
+function AdminHome() {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    document.title = "Users";
     sendGetAllUsersRequest(user).then(setUsers)
   }, [user]);
 
-  console.log(users);
-  const userList = users.map((entry) => <UserEntry entry={entry} />);
+  const userList = users.map((entry) => <UserEntry key={entry.id} entry={entry} />);
 
   return (
     <>
-      <Navbar active="Users" />
       <h2>Users</h2>
       <table className="user-list">
         <thead>
@@ -68,4 +64,4 @@ function UserEntry({ entry }) {
   );
 }
 
-export default Users;
+export default AdminHome;
