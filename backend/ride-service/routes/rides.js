@@ -4,6 +4,7 @@ const ridesController = require('../controllers/ridesController');
 const auth = require('../middleware/auth');
 
 router.post('/request', auth, ridesController.requestRide);
+router.get('/route-info', auth, ridesController.routeInfo);
 router.get('/history', auth, ridesController.rideHistory);
 router.get('/available', auth, ridesController.availableRides);
 router.get('/assigned', auth, ridesController.assignedRides);

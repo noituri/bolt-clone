@@ -2,23 +2,42 @@ const { Ride, RideRequest, User, Driver } = require('../../db-schema/models');
 const { canAccessRide, isDriver, isClient } = require('../helpers/permissions');
 const { findAvailableDriver } = require('../helpers/driver');
 const { validateRideData } = require('../helpers/validation');
-
+const { getRouteInfo } = require('../helpers/osrm');
 
 module.exports = {
-    // Client requests a ride
+
     requestRide: async (req, res) => {
         try {
             if (!isClient(req.user)) return res.status(403).json({ error: 'Only clients can request rides.' });
 
-            const { from_address, to_address, amount } = req.body;
-            const validationError = validateRideData({ from_address, to_address, amount });
-            if (validationError) return res.status(400).json({ error: validationError });
+            const { from_lat, from_lon, to_lat, to_lon, from_address, to_address } = req.body;
+
+            if (!from_lat || !from_lon || !to_lat || !to_lon || !from_address || !to_address) {
+                return res.status(400).json({ error: 'Coordinates and addresses are required' });
+            }
+
+            // trasa z OSRM
+            const routeInfo = await getRouteInfo(
+                { lat: from_lat, lon: from_lon },
+                { lat: to_lat, lon: to_lon }
+            );
+
+            const pricePerKm = 5;
+            const amount = (routeInfo.distance / 1000 * pricePerKm).toFixed(2);
+
 
             const ride = await Ride.create({
                 client_id: req.user.id,
                 from_address,
                 to_address,
+                from_lat,
+                from_lon,
+                to_lat,
+                to_lon,
+                distance: routeInfo.distance,
+                duration: routeInfo.duration,
                 amount,
+                geometry: JSON.stringify(routeInfo.geometry),
                 status: 'pending',
                 requested_at: new Date()
             });
@@ -37,11 +56,44 @@ module.exports = {
             });
 
             await ride.update({ status: 'assigned', driver_id: driver.id });
-            res.status(201).json({ message: 'Ride requested and assigned to a driver.', ride });
+            res.status(201).json({
+                message: 'Ride requested and assigned to a driver.',
+                ride
+            });
         } catch (err) {
+            console.error(err);
             res.status(500).json({ error: 'Server error' });
         }
     },
+
+
+    routeInfo: async (req, res) => {
+        try {
+            const { from_lat, from_lon, to_lat, to_lon } = req.query;
+            if (!from_lat || !from_lon || !to_lat || !to_lon) {
+                return res.status(400).json({ error: 'Coordinates are required' });
+            }
+
+            const routeInfo = await getRouteInfo(
+                { lat: parseFloat(from_lat), lon: parseFloat(from_lon) },
+                { lat: parseFloat(to_lat), lon: parseFloat(to_lon) }
+            );
+
+            const pricePerKm = 5;
+            const amount = (routeInfo.distance / 1000 * pricePerKm).toFixed(2);
+
+            res.status(200).json({
+                distance: routeInfo.distance,
+                duration: routeInfo.duration,
+                amount,
+                geometry: routeInfo.geometry
+            });
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ error: 'Server error' });
+        }
+    },
+
 
     // Get ride history for current user
     rideHistory: async (req, res) => {

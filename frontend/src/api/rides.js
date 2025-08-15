@@ -5,9 +5,10 @@ const ENDPOINT = "http://localhost:3001/rides";
 
 export async function sendRequestRideRequest(
   user,
-  pickupAddress,
-  destination,
-  price,
+  fromAddress,
+  toAddress,
+  fromCoords,      // { lat, lng }
+  toCoords         // { lat, lng }
 ) {
   const resp = await fetch(`${ENDPOINT}/request`, {
     method: "POST",
@@ -16,9 +17,12 @@ export async function sendRequestRideRequest(
       authorization: `Bearer ${user.token}`,
     },
     body: JSON.stringify({
-      from_address: pickupAddress,
-      to_address: destination,
-      amount: price,
+      from_address: fromAddress,
+      to_address: toAddress,
+      from_lat: fromCoords?.lat,
+      from_lon: fromCoords?.lng,
+      to_lat: toCoords?.lat,
+      to_lon: toCoords?.lng,
     }),
   });
 
@@ -49,5 +53,19 @@ export async function sendCancelRideRequest(user, rideId) {
     headers: { authorization: `Bearer ${user.token}` },
   });
 
+  return await getJsonData(resp);
+}
+
+export async function sendRouteInfoRequest(user, fromCoords, toCoords) {
+  const params = new URLSearchParams({
+    from_lat: String(fromCoords.lat),
+    from_lon: String(fromCoords.lng),
+    to_lat: String(toCoords.lat),
+    to_lon: String(toCoords.lng),
+  });
+  const resp = await fetch(`${ENDPOINT}/route-info?${params.toString()}`, {
+    method: "GET",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
   return await getJsonData(resp);
 }

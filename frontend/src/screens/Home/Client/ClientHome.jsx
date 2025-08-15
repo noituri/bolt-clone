@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import InputField from "../../../components/InputField";
 import PrimaryButton from "../../../components/PrimaryButton";
 import "./ClientHome.css";
@@ -6,12 +6,79 @@ import {
   sendCancelRideRequest,
   sendGetRideHistoryRequest,
   sendRequestRideRequest,
+  sendRouteInfoRequest,
 } from "../../../api/rides";
 import { useAuth } from "../../../hooks/useAuth";
-import { useEffect } from "react";
 import { dateFormatter, getUserReadableRideStatus } from "../../../utils";
 
-// TODO: Payment
+import { MapContainer, TileLayer, Marker, Polyline, Rectangle, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+
+//Marker icons 
+const pickupIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+  iconSize: [32, 32],
+});
+const destIcon = new L.Icon({
+  iconUrl: "https://maps.google.com/mapfiles/ms/icons/red-dot.png",
+  iconSize: [32, 32],
+});
+
+//Nominatim helpers (reverse + search)
+async function reverseGeocode(lat, lon) {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=jsonv2&accept-language=pl`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "bolt-clone-demo/1.0",
+    },
+  });
+  const data = await res.json();
+  return data?.display_name || "";
+}
+
+async function searchAddress(query) {
+  if (!query || query.trim().length < 3) return [];
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+    query
+  )}&format=jsonv2&addressdetails=1&limit=5&accept-language=pl`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "bolt-clone-demo/1.0",
+    },
+  });
+  const data = await res.json();
+  return (data || []).map((r) => ({
+    label: r.display_name,
+    lat: parseFloat(r.lat),
+    lng: parseFloat(r.lon),
+  }));
+}
+
+//  debouncer
+function useDebouncedCallback(cb, delay) {
+  const t = useRef(null);
+  return (...args) => {
+    if (t.current) clearTimeout(t.current);
+    t.current = setTimeout(() => cb(...args), delay);
+  };
+}
+
+// Komponent zbierający kliknięcia na mapie (z refem do activeField)
+function ClickPicker({ activeField, onPick }) {
+  const fieldRef = useRef(activeField);
+  useEffect(() => {
+    fieldRef.current = activeField;
+  }, [activeField]);
+
+  useMapEvents({
+    click: (e) => {
+      onPick(fieldRef.current, e.latlng);
+    },
+  });
+
+  return null;
+}
+
 function ClientHome() {
   const { user } = useAuth();
   const [activeRide, setActiveRide] = useState();
@@ -20,7 +87,6 @@ function ClientHome() {
     const interval = setInterval(() => {
       getActiveRide(user).then((ride) => setActiveRide(ride));
     }, 1000);
-
     return () => clearInterval(interval);
   }, [user]);
 
@@ -30,9 +96,7 @@ function ClientHome() {
   };
 
   if (activeRide) {
-    return (
-      <ActiveRideScreen ride={activeRide} user={user} onCancel={onRideCancel} />
-    );
+    return <ActiveRideScreen ride={activeRide} user={user} onCancel={onRideCancel} />;
   }
   return <RequestRideScreen user={user} setActiveRide={setActiveRide} />;
 }
@@ -59,38 +123,221 @@ function ActiveRideScreen({ ride, user, onCancel }) {
 }
 
 function RequestRideScreen({ user, setActiveRide }) {
+  // Pola / aktywne pole
+  const [activeField, setActiveField] = useState("pickup"); // 'pickup' | 'destination'
+  const [pickupAddress, setPickupAddress] = useState("");
+  const [destAddress, setDestAddress] = useState("");
+  const [pickupCoords, setPickupCoords] = useState(null); // {lat, lng}
+  const [destCoords, setDestCoords] = useState(null);
+
+  const [pickupSuggestions, setPickupSuggestions] = useState([]);
+  const [destSuggestions, setDestSuggestions] = useState([]);
+  const [routeLine, setRouteLine] = useState([]); // [ [lat, lng], ... ]
+  const [distanceM, setDistanceM] = useState(null);
+  const [durationS, setDurationS] = useState(null);
+  const [amount, setAmount] = useState(null);
   const [error, setError] = useState("");
 
-  const onRequest = async (data) => {
-    setError("");
-    const pickup = data.get("pickup");
-    const destination = data.get("destination");
+  // Granice mapy 
+  const maxBounds = useMemo(
+    () => [
+      [49.0, 14.0], // SW
+      [55.0, 24.5], // NE
+    ],
+    []
+  );
 
+  // Debounce dla podpowiedzi
+  const debouncedSearchPickup = useDebouncedCallback(async (q) => {
+    setPickupSuggestions(await searchAddress(q));
+  }, 300);
+
+  const debouncedSearchDest = useDebouncedCallback(async (q) => {
+    setDestSuggestions(await searchAddress(q));
+  }, 300);
+
+  const handlePickOnMap = async (field, ll) => {
+    if (field === "pickup") {
+      setPickupCoords(ll);
+      const addr = await reverseGeocode(ll.lat, ll.lng);
+      setPickupAddress(addr);
+      setPickupSuggestions([]);
+    } else {
+      setDestCoords(ll);
+      const addr = await reverseGeocode(ll.lat, ll.lng);
+      setDestAddress(addr);
+      setDestSuggestions([]);
+    }
+  };
+
+  const onPickupChange = (e) => {
+    const v = e.target.value;
+    setPickupAddress(v);
+    debouncedSearchPickup(v);
+  };
+  const onDestChange = (e) => {
+    const v = e.target.value;
+    setDestAddress(v);
+    debouncedSearchDest(v);
+  };
+
+  const choosePickupSuggestion = (s) => {
+    setPickupAddress(s.label);
+    setPickupCoords({ lat: s.lat, lng: s.lng });
+    setPickupSuggestions([]);
+  };
+  const chooseDestSuggestion = (s) => {
+    setDestAddress(s.label);
+    setDestCoords({ lat: s.lat, lng: s.lng });
+    setDestSuggestions([]);
+  };
+
+  useEffect(() => {
+    const fetchRoute = async () => {
+      try {
+        setError("");
+        setRouteLine([]);
+        setDistanceM(null);
+        setDurationS(null);
+        setAmount(null);
+
+        if (!pickupCoords || !destCoords) return;
+
+        const data = await sendRouteInfoRequest(user, pickupCoords, destCoords);
+        setDistanceM(data.distance ?? null);
+        setDurationS(data.duration ?? null);
+        setAmount(data.amount ?? null);
+
+        if (data.geometry && data.geometry.coordinates) {
+          const line = data.geometry.coordinates.map(([lon, lat]) => [lat, lon]);
+          setRouteLine(line);
+        }
+      } catch (e) {
+        setError(e.message || "Failed to load route info");
+      }
+    };
+
+    fetchRoute();
+  }, [pickupCoords, destCoords, user]);
+
+  // request przejazdu
+  const onRequest = async (e) => {
+    e.preventDefault();
+    setError("");
     try {
+      if (!pickupCoords || !destCoords || !pickupAddress || !destAddress) {
+        setError("Please select both addresses.");
+        return;
+      }
       const response = await sendRequestRideRequest(
         user,
-        pickup,
-        destination,
-        20,
+        pickupAddress,
+        destAddress,
+        pickupCoords,
+        destCoords
       );
       setActiveRide(response.ride);
     } catch (e) {
-      setError(e.message);
+      setError(e.message || "Failed to request ride");
     }
   };
+
+  // formatki
+  const durationMin = durationS != null ? Math.round(durationS / 60) : null;
+  const distanceKm = distanceM != null ? (distanceM / 1000).toFixed(2) : null;
 
   return (
     <div className="home-container">
       <h1>Request a ride</h1>
       {error !== "" && <p className="error-color">{error}</p>}
-      <form className="" action={onRequest}>
+
+      <form className="ride-form" onSubmit={onRequest}>
         <div className="ride-request-form">
-          <InputField placeholder="Pickup location" name="pickup" />
-          <InputField placeholder="Destination" name="destination" />
+          {/* WAŻNE: activeField na WRAPPERZE, bo InputField nie przyjmuje onFocus/onMouseDown */}
+          <div
+            className="input-with-suggestions"
+            onMouseDown={() => setActiveField("pickup")}
+            onFocus={() => setActiveField("pickup")}
+            tabIndex={-1}
+          >
+            <InputField
+              placeholder="Pickup location"
+              name="pickup"
+              value={pickupAddress}
+              onChange={onPickupChange}
+            />
+            {pickupSuggestions.length > 0 && (
+              <ul className="suggestions">
+                {pickupSuggestions.map((s, i) => (
+                  <li key={`p-${i}`} onMouseDown={() => choosePickupSuggestion(s)}>
+                    {s.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div
+            className="input-with-suggestions"
+            onMouseDown={() => setActiveField("destination")}
+            onFocus={() => setActiveField("destination")}
+            tabIndex={-1}
+          >
+            <InputField
+              placeholder="Destination"
+              name="destination"
+              value={destAddress}
+              onChange={onDestChange}
+            />
+            {destSuggestions.length > 0 && (
+              <ul className="suggestions">
+                {destSuggestions.map((s, i) => (
+                  <li key={`d-${i}`} onMouseDown={() => chooseDestSuggestion(s)}>
+                    {s.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
-        <PrimaryButton type="submit">Request ride for
-          $20</PrimaryButton>
+
+        <div className="map-wrapper">
+          <MapContainer
+            center={[52.2297, 21.0122]}
+            zoom={12}
+            style={{ height: "420px", width: "100%" }}
+            maxBounds={maxBounds}
+            maxBoundsViscosity={1.0}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+            {/* ClickPicker z refem do activeField */}
+            <ClickPicker activeField={activeField} onPick={handlePickOnMap} />
+
+            {/* Prostokąt ograniczający (wizualnie) */}
+            <Rectangle bounds={maxBounds} pathOptions={{ weight: 1 }} />
+
+            {pickupCoords && <Marker position={pickupCoords} icon={pickupIcon} />}
+            {destCoords && <Marker position={destCoords} icon={destIcon} />}
+
+            {routeLine.length > 0 && <Polyline positions={routeLine} />}
+          </MapContainer>
+        </div>
+
+        <div className="route-stats">
+          <div><strong>Distance:</strong> {distanceKm ? `${distanceKm} km` : "-"}</div>
+          <div><strong>Duration:</strong> {durationMin != null ? `${durationMin} min` : "-"}</div>
+          <div><strong>Estimated price:</strong> {amount != null ? `${amount} PLN` : "-"}</div>
+        </div>
+
+        <PrimaryButton type="submit" disabled={!pickupCoords || !destCoords}>
+          Request ride
+        </PrimaryButton>
       </form>
+
+      <p className="nominatim-note">
+        Search powered by OpenStreetMap Nominatim (for demo purposes).
+      </p>
     </div>
   );
 }
