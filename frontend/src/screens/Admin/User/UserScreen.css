@@ -1,9 +1,94 @@
+html, body, #root {
+    background: #fff;
+}
+
+
 .user-form {
-    color: black;
+    color: #000;
     margin: auto;
     max-width: 600px;
 }
 
 .user-form .delete-button {
-  margin-top: 10px;
+    margin-top: 10px;
+}
+
+.user-divider {
+    margin: 24px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+
+.form-error {
+    color: #c0392b;
+    margin: 6px 0 12px;
+    font-size: 14px;
+}
+
+.form-success {
+    color: #1e7e34;
+    margin: 6px 0 12px;
+    font-size: 14px;
+}
+
+.form-label {
+    display: block;
+    font-size: 14px;
+    margin: 4px 0 6px;
+    color: #333;
+}
+
+.form-hint {
+    font-size: 12px;
+    color: #777;
+    margin: 4px 0 0;
+}
+
+/* === Modal === */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px;
+    z-index: 999;
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 640px;
+    border-radius: 12px;
+    background: #fff;
+    color: #000;
+    box-shadow:
+            0 10px 20px rgba(0,0,0,0.12),
+            0 6px 6px rgba(0,0,0,0.10);
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #666;
+}
+
+.modal-close:hover {
+    color: #000;
+}
+
+.modal-body {
+    padding: 16px 18px 20px 18px;
 }

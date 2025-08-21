@@ -12,6 +12,6 @@ RUN mkdir -p /data
 
 WORKDIR /app/auth-login-service
 
-EXPOSE 3000
+EXPOSE 3010
 
 CMD ["node", "service.js"]

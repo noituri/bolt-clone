@@ -35,3 +35,19 @@ export async function sendLoginRequest(username, password) {
 }
 
 // TODO(noituri): Add sendChangePasswordRequest
+export async function sendChangePasswordRequest(user, oldPassword, newPassword) {
+  const resp = await fetch(`${ENDPOINT}/users/change-password`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${user.token}`,
+    },
+    body: JSON.stringify({
+      old_password: oldPassword,
+      new_password: newPassword,
+    }),
+  });
+
+
+  return await getJsonData(resp);
+}

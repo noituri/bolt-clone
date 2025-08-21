@@ -4,9 +4,11 @@ import "./AdminHome.css";
 import { useAuth } from "../../../hooks/useAuth";
 import { dateFormatter } from "../../../utils";
 import { sendGetAllUsersRequest } from "../../../api/admin";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
+import PrimaryButton from "../../../components/PrimaryButton";
 
 function AdminHome() {
+    const navigate = useNavigate();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
 
@@ -18,8 +20,19 @@ function AdminHome() {
 
   return (
     <>
-      <h2>Users</h2>
+        <h2 style={{ textAlign: "center" }}>Users</h2>
+        <div style={{ textAlign: "center" }}>
+            <PrimaryButton
+                type="button"
+                onClick={() => navigate("/admin/users/new")}
+                className="center-button"
+            >
+                ➕ Add user
+            </PrimaryButton>
+        </div>
+
       <table className="user-list">
+
         <thead>
           <tr className="user-list-entry">
             <th>ID</th>

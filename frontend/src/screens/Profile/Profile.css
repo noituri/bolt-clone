@@ -3,3 +3,36 @@
     margin: auto;
     max-width: 600px;
 }
+
+.profile-divider {
+    margin: 24px 0;
+    border: none;
+    border-top: 1px solid #eee;
+}
+
+.form-field { margin-bottom: 12px; }
+
+.input-invalid {
+    border-color: #e74c3c !important;
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.1);
+}
+
+.field-error {
+    color: #e74c3c;
+    font-size: 13px;
+    margin-top: 6px;
+}
+
+.form-error-global {
+    color: #e74c3c;
+    margin: 8px 0 12px;
+}
+
+.form-success {
+    color: #2e7d32;
+    margin-top: 8px;
+}
+
+
+
+

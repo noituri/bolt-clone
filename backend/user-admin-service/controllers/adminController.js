@@ -86,5 +86,28 @@ module.exports = {
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
         }
+    },
+    changeUserPassword: async (req, res) => {
+        const { id } = req.params;
+        const { new_password } = req.body;
+
+        if (!new_password) {
+            return res.status(400).json({ error: "New password required" });
+        }
+
+        try {
+            const user = await User.findByPk(id);
+            if (!user) {
+                return res.status(404).json({ error: "User not found" });
+            }
+
+            user.password = new_password;
+            await user.save();
+
+            res.status(200).json({ message: "Password updated successfully" });
+        } catch (err) {
+            res.status(500).json({ error: "Server error" });
+        }
     }
+
 };

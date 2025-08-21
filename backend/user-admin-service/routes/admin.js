@@ -8,5 +8,6 @@ router.post('/users', adminAuthMiddleware, adminController.addUser);
 router.get('/users/:id', adminAuthMiddleware, adminController.getUserById);
 router.put('/users/:id', adminAuthMiddleware, adminController.modifyUser);
 router.delete('/users/:id', adminAuthMiddleware, adminController.deleteUser);
+router.put("/users/:id/change-password", adminAuthMiddleware, adminController.changeUserPassword);
 
 module.exports = router;
