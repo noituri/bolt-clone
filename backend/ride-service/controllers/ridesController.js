@@ -3,51 +3,76 @@ const { canAccessRide, isDriver, isClient } = require('../helpers/permissions');
 const { findAvailableDriver } = require('../helpers/driver');
 const { validateRideData } = require('../helpers/validation');
 const { getRouteInfo } = require('../helpers/osrm');
-
+const { Op } = require('sequelize');
 module.exports = {
 
     requestRide: async (req, res) => {
         try {
-            if (!isClient(req.user)) return res.status(403).json({ error: 'Only clients can request rides.' });
+            if (!isClient(req.user)) {
+                return res.status(403).json({ error: 'Only clients can request rides.' });
+            }
 
-            const { from_lat, from_lon, to_lat, to_lon, from_address, to_address } = req.body;
+            const {
+                from_lat, from_lon,
+                to_lat, to_lon,
+                from_address, to_address
+            } = req.body;
 
-            if (!from_lat || !from_lon || !to_lat || !to_lon || !from_address || !to_address) {
+            // Walidacja obecności pól
+            if (
+                from_lat == null || from_lon == null ||
+                to_lat == null || to_lon == null ||
+                !from_address || !to_address
+            ) {
                 return res.status(400).json({ error: 'Coordinates and addresses are required' });
             }
 
-            // trasa z OSRM
+            // Upewnij się, że przekazujemy liczby do OSRM i bazy
+            const fFromLat = parseFloat(from_lat);
+            const fFromLon = parseFloat(from_lon);
+            const fToLat   = parseFloat(to_lat);
+            const fToLon   = parseFloat(to_lon);
+
+            if ([fFromLat, fFromLon, fToLat, fToLon].some(Number.isNaN)) {
+                return res.status(400).json({ error: 'Invalid coordinates' });
+            }
+
+            // Trasa z OSRM
             const routeInfo = await getRouteInfo(
-                { lat: from_lat, lon: from_lon },
-                { lat: to_lat, lon: to_lon }
+                { lat: fFromLat, lon: fFromLon },
+                { lat: fToLat,   lon: fToLon }
             );
 
             const pricePerKm = 5;
-            const amount = (routeInfo.distance / 1000 * pricePerKm).toFixed(2);
+            const amount = Math.round((routeInfo.distance / 1000) * pricePerKm * 100) / 100;
 
-
+            // Tworzymy ride zawsze jako pending
             const ride = await Ride.create({
                 client_id: req.user.id,
                 from_address,
                 to_address,
-                from_lat,
-                from_lon,
-                to_lat,
-                to_lon,
+                from_lat: fFromLat,
+                from_lon: fFromLon,
+                to_lat:   fToLat,
+                to_lon:   fToLon,
                 distance: routeInfo.distance,
                 duration: routeInfo.duration,
-                amount,
                 geometry: JSON.stringify(routeInfo.geometry),
+                amount,
                 status: 'pending',
                 requested_at: new Date()
             });
 
-            const driver = await Driver.findOne({ where: { is_available: true } });
+            // Spróbuj znaleźć kierowcę; jeśli brak – zostaw pending i 201
+            const driver = await findAvailableDriver(ride.id);
             if (!driver) {
-                await ride.update({ status: 'canceled' });
-                return res.status(409).json({ message: 'No drivers available.', ride });
+                return res.status(201).json({
+                    message: 'Ride requested. Waiting for a driver.',
+                    ride
+                });
             }
 
+            // Przydział do kierowcy
             await RideRequest.create({
                 ride_id: ride.id,
                 driver_id: driver.id,
@@ -56,15 +81,21 @@ module.exports = {
             });
 
             await ride.update({ status: 'assigned', driver_id: driver.id });
+
             res.status(201).json({
                 message: 'Ride requested and assigned to a driver.',
                 ride
             });
+
+            // Po odpowiedzi – oznacz kierowcę jako zajętego
+            await Driver.update({ is_available: false }, { where: { id: driver.id } });
         } catch (err) {
             console.error(err);
             res.status(500).json({ error: 'Server error' });
         }
     },
+
+
 
 
     routeInfo: async (req, res) => {
@@ -115,14 +146,23 @@ module.exports = {
     // List available rides for driver
     availableRides: async (req, res) => {
         try {
-            if (!isDriver(req.user)) return res.status(403).json({ error: 'Only drivers can see available rides.' });
+            if (!isDriver(req.user)) {
+                return res.status(403).json({ error: 'Only drivers can see available rides.' });
+            }
 
             const rideRequests = await RideRequest.findAll({
                 where: { driver_id: req.user.id, status: 'pending' }
             });
 
             const rideIds = rideRequests.map(r => r.ride_id);
-            const rides = await Ride.findAll({ where: { id: rideIds } });
+
+            const rides = await Ride.findAll({
+                where: {
+                    id: rideIds.length ? rideIds : [-1],
+                    status: { [Op.in]: ['assigned', 'pending'] }
+                }
+            });
+
             res.status(200).json(rides);
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
@@ -133,9 +173,10 @@ module.exports = {
     assignedRides: async (req, res) => {
         try {
             if (!isDriver(req.user)) return res.status(403).json({ error: 'Only drivers can see assigned rides.' });
-            const rides = await Ride.findAll({
-                where: { driver_id: req.user.id, status: ['assigned', 'accepted'] }
-            });
+                        const { Op } = require('sequelize');
+                        const rides = await Ride.findAll({
+                                where: { driver_id: req.user.id, status: { [Op.in]: ['assigned', 'accepted'] } }
+                        });
             res.status(200).json(rides);
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
@@ -168,6 +209,14 @@ module.exports = {
             if (ride.status === 'completed' || ride.status === 'canceled') {
                 return res.status(409).json({ error: 'Cannot cancel this ride.' });
             }
+            if (ride.driver_id) {
+                await Driver.update({ is_available: true }, { where: { id: ride.driver_id } });
+            }
+                        await RideRequest.update(
+                                { status: 'expired', responded_at: new Date() },
+                                { where: { ride_id: ride.id, status: 'pending' } }
+                            );
+
             await ride.update({ status: 'canceled' });
             res.status(200).json({ message: 'Ride canceled.' });
         } catch (err) {
@@ -190,7 +239,30 @@ module.exports = {
             if (!request) return res.status(409).json({ error: 'No pending request for this driver.' });
 
             await request.update({ status: 'accepted', responded_at: new Date() });
-            await ride.update({ status: 'accepted', accepted_at: new Date() });
+
+            // KLUCZOWE: przypnij kurs do akceptującego kierowcy i oznacz go jako zajętego
+            await ride.update({
+                status: 'accepted',
+                driver_id: req.user.id,
+                accepted_at: new Date()
+            });
+
+                        await RideRequest.update(
+                                { status: 'expired', responded_at: new Date() },
+                                {
+                                    where: {
+                                        ride_id: ride.id,
+                                            status: 'pending',
+                                            driver_id: { [Op.ne]: req.user.id }
+                                    }
+                            }
+                        );
+
+            await Driver.update(
+                { is_available: false },
+                { where: { id: req.user.id } }
+            );
+
             res.status(200).json({ message: 'Ride accepted.' });
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
@@ -212,7 +284,14 @@ module.exports = {
             if (!request) return res.status(409).json({ error: 'No pending request for this driver.' });
 
             await request.update({ status: 'rejected', responded_at: new Date() });
-
+            await Driver.update(
+                { is_available: true },
+                { where: { id: req.user.id } }
+            );
+                        await RideRequest.update(
+                                { status: 'expired', responded_at: new Date() },
+                                { where: { ride_id: ride.id, status: 'pending' } }
+                            );
             const nextDriver = await findAvailableDriver(ride.id);
 
             if (nextDriver) {
@@ -228,6 +307,35 @@ module.exports = {
                 await ride.update({ status: 'canceled' });
                 return res.status(409).json({ message: 'No drivers available, ride canceled.' });
             }
+        } catch (err) {
+            res.status(500).json({ error: 'Server error' });
+        }
+    },
+
+    completeRide: async (req, res) => {
+        try {
+            const { id } = req.params;
+            if (!isDriver(req.user)) return res.status(403).json({ error: 'Only drivers can complete rides.' });
+
+            const ride = await Ride.findByPk(id);
+            if (!ride) return res.status(404).json({ error: 'Ride not found.' });
+
+            // może zakończyć tylko kierowca przypięty do kursu i tylko kurs "accepted"
+            if (ride.driver_id !== req.user.id) return res.status(403).json({ error: 'Forbidden.' });
+            if (ride.status !== 'accepted') return res.status(409).json({ error: 'Ride is not active.' });
+
+                        await ride.update({ status: 'completed', finished_at: new Date() });
+
+                            // Wygaszamy ewentualne pozostałe pending (gdyby jakieś się ostały)
+                                await RideRequest.update(
+                                        { status: 'expired', responded_at: new Date() },
+                                        { where: { ride_id: ride.id, status: 'pending' } }
+                                    );
+
+            // uwolnij kierowcę
+            await Driver.update({ is_available: true }, { where: { id: req.user.id } });
+
+            res.status(200).json({ message: 'Ride completed.' });
         } catch (err) {
             res.status(500).json({ error: 'Server error' });
         }

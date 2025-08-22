@@ -1,0 +1,187 @@
+:root {
+    --driver-bg: #ffffff;
+    --driver-text: #111827; /* near-black */
+    --driver-muted: #6b7280; /* gray-500 */
+    --driver-border: #e5e7eb; /* gray-200 */
+    --driver-surface: #ffffff;
+    --driver-surface-alt: #f9fafb; /* gray-50 */
+    --driver-accent: #2563eb; /* blue-600 (used in PrimaryButton maybe) */
+    --driver-chip: #eef2ff; /* indigo-50 */
+    --driver-chip-text: #3730a3; /* indigo-800 */
+    --driver-danger: #b91c1c;
+}
+
+.driver-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px;
+    color: var(--driver-text);
+    background: var(--driver-bg);
+}
+
+.driver-alert {
+    background: #fff7ed;        /* orange-50 */
+    color: #9a3412;             /* orange-800 */
+    border: 1px solid #fed7aa;  /* orange-200 */
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin: 8px 0 16px;
+}
+
+.driver-section {
+    margin-top: 18px;
+}
+
+.driver-h2 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 800;
+    margin: 12px 0 10px;
+    color: var(--driver-text);
+}
+
+.driver-empty {
+    text-align: center;
+    color: var(--driver-muted);
+    padding: 16px 0 6px;
+}
+
+.driver-list {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    display: grid;
+    gap: 12px;
+}
+
+.driver-card {
+    background: var(--driver-surface);
+    border: 1px solid var(--driver-border);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.03);
+}
+
+.driver-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto; /* <= ważne: pozwala się kurczyć */
+    align-items: center;
+    gap: 12px;
+}
+
+.driver-main {
+    display: grid;
+    gap: 8px;
+    min-width: 0; /* ellipsis działa w gridzie */
+}
+
+.driver-route {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--driver-text);
+    min-width: 0; /* kluczowe dla ellipsis */
+}
+
+.driver-address {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    max-width: 46vw;      /* przytnij bardzo długie adresy */
+    overflow-wrap: anywhere;
+}
+
+.driver-arrow {
+    opacity: 0.7;
+}
+
+.driver-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    color: var(--driver-muted);
+    font-size: 14px;
+}
+
+.driver-price {
+    background: var(--driver-chip);
+    color: var(--driver-chip-text);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.driver-status {
+    background: var(--driver-surface-alt);
+    border: 1px solid var(--driver-border);
+    color: var(--driver-text);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.driver-date {
+    opacity: 0.9;
+}
+
+.driver-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    flex-wrap: wrap; /* guziki nie wypychają layoutu */
+}
+
+.driver-secondary {
+    background: #ffffff;
+    color: var(--driver-text);
+    border: 1px solid var(--driver-border);
+    padding: 8px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.05s ease-in-out, background 0.2s ease-in-out;
+}
+.driver-secondary:hover {
+    background: var(--driver-surface-alt);
+}
+.driver-secondary:active {
+    transform: translateY(1px);
+}
+.driver-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+    .driver-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .driver-actions {
+        justify-content: stretch;
+    }
+    .driver-actions > * {
+        flex: 1;
+    }
+    .driver-address {
+        max-width: 100%;
+    }
+    .driver-route {
+        flex-wrap: wrap;
+    }
+}
+.driver-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;       /* ⬅️ zapobiega ściskaniu przycisków */
+    align-items: center;
+}
+
+.driver-actions button,
+.driver-actions .primary-button {
+    min-width: 100px;     /* ⬅️ zapewnia, że cały napis się zmieści */
+    flex-shrink: 0;
+}

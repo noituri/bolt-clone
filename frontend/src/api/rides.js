@@ -69,3 +69,43 @@ export async function sendRouteInfoRequest(user, fromCoords, toCoords) {
   });
   return await getJsonData(resp);
 }
+
+export async function sendGetAvailableRidesRequest(user) {
+  const resp = await fetch(`${ENDPOINT}/available`, {
+    method: "GET",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}
+
+export async function sendGetAssignedRidesRequest(user) {
+  const resp = await fetch(`${ENDPOINT}/assigned`, {
+    method: "GET",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}
+
+export async function sendAcceptRideRequest(user, rideId) {
+  const resp = await fetch(`${ENDPOINT}/accept/${rideId}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}
+
+export async function sendRejectRideRequest(user, rideId) {
+  const resp = await fetch(`${ENDPOINT}/reject/${rideId}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}
+
+export async function sendCompleteRideRequest(user, rideId) {
+  const resp = await fetch(`${ENDPOINT}/complete/${rideId}`, {
+    method: "POST",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}

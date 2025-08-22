@@ -76,7 +76,7 @@ async function seed() {
         duration: rideTemplates[i].duration,
         geometry: null, // Można później wypełnić z OSRM
         amount: Math.round((rideTemplates[i].distance / 1000) * 5 * 100) / 100,
-        status: i % 2 === 0 ? 'completed' : 'pending',
+        status: i % 2 === 0 ? 'completed' : 'assigned',
         requested_at: dateShift(-120 + i * 15),
         accepted_at: i % 2 === 0 ? dateShift(-110 + i * 15) : null,
         finished_at: i % 2 === 0 ? dateShift(-100 + i * 15) : null,
@@ -84,19 +84,22 @@ async function seed() {
     }
 
     // Ride requests for each "pending" ride
-    for (let ride of rides) {
-      if (ride.status === 'pending') {
-        for (let d of drivers) {
-          await RideRequest.create({
-            ride_id: ride.id,
-            driver_id: d.id,
-            status: d.id === ride.driver_id ? 'accepted' : 'pending',
-            requested_at: ride.requested_at,
-            responded_at: d.id === ride.driver_id ? ride.accepted_at : null,
-          });
-        }
-      }
-    }
+        for (let ride of rides) {
+            if (ride.status === 'assigned') {
+                await RideRequest.create({
+                      ride_id: ride.id,
+                      driver_id: ride.driver_id,
+                      status: 'pending',
+                      requested_at: ride.requested_at,
+                      responded_at: null,
+                    });
+
+              await Driver.update(
+                  { is_available: false },
+                  { where: { id: ride.driver_id } }
+              );
+              }
+          }
 
     // Payments for "completed" rides
     for (let ride of rides) {

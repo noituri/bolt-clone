@@ -10,6 +10,7 @@ import {
   AUTH_ROLE_DRIVER,
 } from "../../api/auth";
 import AdminHome from "./Admin/AdminHome";
+import DriverHome from "../Driver/DriverHome";
 
 function Home() {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ function Home() {
     } else if (profile.role === AUTH_ROLE_ADMIN) {
       homeComponent = <AdminHome />;
     } else if (profile.role === AUTH_ROLE_DRIVER) {
-      homeComponent = <h2>Unimplemented driver home</h2>;
+      homeComponent = <DriverHome />;
     } else {
       homeComponent = <h2>Unkown user role</h2>;
     }

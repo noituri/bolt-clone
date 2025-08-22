@@ -12,5 +12,5 @@ router.get('/:id', auth, ridesController.getRide);
 router.put('/cancel/:id', auth, ridesController.cancelRide);
 router.post('/accept/:id', auth, ridesController.acceptRide);
 router.post('/reject/:id', auth, ridesController.rejectRide);
-
+router.post('/complete/:id', auth, ridesController.completeRide);
 module.exports = router;
