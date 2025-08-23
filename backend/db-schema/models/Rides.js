@@ -31,10 +31,8 @@ const Ride = sequelize.define('Ride', {
     type: DataTypes.STRING(255),
     allowNull: false
   },
-
-  // === New fields for OSRM integration ===
   from_lat: {
-    type: DataTypes.DECIMAL(10, 7), // ~ accuracy to ~1cm
+    type: DataTypes.DECIMAL(10, 7),
     allowNull: false
   },
   from_lon: {
@@ -61,8 +59,6 @@ const Ride = sequelize.define('Ride', {
     type: DataTypes.TEXT, // geojson string
     allowNull: true
   },
-  // === End of new fields ===
-
   amount: {
     type: DataTypes.DECIMAL(8, 2),
     allowNull: false
@@ -71,6 +67,10 @@ const Ride = sequelize.define('Ride', {
     type: DataTypes.ENUM('pending', 'assigned', 'accepted', 'completed', 'canceled'),
     allowNull: false,
     defaultValue: 'pending'
+  },
+  cancellation_reason: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   requested_at: {
     type: DataTypes.DATE,

@@ -22,3 +22,13 @@ app.get('/ping', (req, res) => {
 app.listen(port, () => {
   console.log(`Ride-service listening on port ${port}`);
 });
+
+// Uruchom usługę kolejki
+const queueService = require('./services/queueService');
+queueService.start();
+
+// Obsługa poprawnego zamykania
+process.on('SIGINT', () => {
+  queueService.stop();
+  process.exit(0);
+});

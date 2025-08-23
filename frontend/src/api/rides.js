@@ -7,8 +7,9 @@ export async function sendRequestRideRequest(
   user,
   fromAddress,
   toAddress,
-  fromCoords,      // { lat, lng }
-  toCoords         // { lat, lng }
+  fromCoords,
+  toCoords,
+  paymentMethod
 ) {
   const resp = await fetch(`${ENDPOINT}/request`, {
     method: "POST",
@@ -23,11 +24,13 @@ export async function sendRequestRideRequest(
       from_lon: fromCoords?.lng,
       to_lat: toCoords?.lat,
       to_lon: toCoords?.lng,
+      method: paymentMethod,
     }),
   });
 
   return await getJsonData(resp);
 }
+
 
 export async function sendGetRideRequest(user, rideId) {
   const resp = await fetch(`${ENDPOINT}/${rideId}`, {

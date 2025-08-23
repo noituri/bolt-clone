@@ -23,17 +23,25 @@ const Payment = sequelize.define('Payment', {
       key: 'id'
     }
   },
+  driver_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'Users',
+      key: 'id'
+    }
+  },
   amount: {
-    type: DataTypes.DECIMAL(8,2),
+    type: DataTypes.DECIMAL(8, 2),
     allowNull: false
   },
   status: {
-    type: DataTypes.ENUM('pending', 'paid', 'failed', 'refunded'),
+    type: DataTypes.ENUM('pending', 'paid', 'failed', 'refunded', 'canceled'),
     allowNull: false,
     defaultValue: 'pending'
   },
   method: {
-    type: DataTypes.STRING(30),
+    type: DataTypes.ENUM('cash', 'card'),
     allowNull: false
   },
   created_at: {
@@ -43,10 +51,6 @@ const Payment = sequelize.define('Payment', {
   },
   paid_at: {
     type: DataTypes.DATE,
-    allowNull: true
-  },
-  reference: {
-    type: DataTypes.STRING(64),
     allowNull: true
   }
 }, {
