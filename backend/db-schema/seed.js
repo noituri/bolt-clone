@@ -50,7 +50,7 @@ async function seed() {
       drivers.push(user);
     }
 
-    // Rides with coordinates + OSRM-like data
+    // Rides with coordinates
     const rideTemplates = [
       { from: "Kraków, Długa 23", to: "Kraków, Rynek 1", fromLat: 50.067, fromLon: 19.94, toLat: 50.061, toLon: 19.937, distance: 1500, duration: 300 },
       { from: "Kraków, Grodzka 12", to: "Kraków, Zakopiańska 14", fromLat: 50.061, fromLon: 19.936, toLat: 50.005, toLon: 19.945, distance: 6200, duration: 1200 },
@@ -74,7 +74,7 @@ async function seed() {
         to_lon: rideTemplates[i].toLon,
         distance: rideTemplates[i].distance,
         duration: rideTemplates[i].duration,
-        geometry: null, // Można później wypełnić z OSRM
+        geometry: null,
         amount: Math.round((rideTemplates[i].distance / 1000) * 5 * 100) / 100,
         status: i % 2 === 0 ? 'completed' : 'assigned',
         requested_at: dateShift(-120 + i * 15),
@@ -83,39 +83,49 @@ async function seed() {
       }));
     }
 
-    // Ride requests for each "pending" ride
-        for (let ride of rides) {
-            if (ride.status === 'assigned') {
-                await RideRequest.create({
-                      ride_id: ride.id,
-                      driver_id: ride.driver_id,
-                      status: 'pending',
-                      requested_at: ride.requested_at,
-                      responded_at: null,
-                    });
+    // Ride requests for each "assigned" ride
+    for (let ride of rides) {
+      if (ride.status === 'assigned') {
+        await RideRequest.create({
+          ride_id: ride.id,
+          driver_id: ride.driver_id,
+          status: 'pending',
+          requested_at: ride.requested_at,
+        });
 
-              await Driver.update(
-                  { is_available: false },
-                  { where: { id: ride.driver_id } }
-              );
-              }
-          }
+        await Driver.update(
+          { is_available: false },
+          { where: { id: ride.driver_id } }
+        );
+      }
+    }
 
     // Payments for "completed" rides
     for (let ride of rides) {
+      let paymentData = {
+        ride_id: ride.id,
+        client_id: ride.client_id,
+        driver_id: ride.driver_id,
+        amount: ride.amount,
+        method: ride.id % 2 === 0 ? 'card' : 'cash',
+        created_at: ride.requested_at || new Date(),
+        paid_at: null,
+        status: 'pending'
+      };
+
+      // status i paid_at w zależności od statusu przejazdu
       if (ride.status === 'completed') {
-        await Payment.create({
-          ride_id: ride.id,
-          client_id: ride.client_id,
-          amount: ride.amount,
-          status: 'paid',
-          method: ['card', 'blik', 'cash'][ride.id % 3],
-          created_at: ride.finished_at,
-          paid_at: ride.finished_at,
-          reference: `PAY-${ride.id}${ride.client_id}${ride.driver_id}`,
-        });
+        paymentData.status = 'paid';
+        paymentData.paid_at = ride.finished_at || new Date();
+      } else if (ride.status === 'assigned') {
+        paymentData.status = 'pending';
+      } else if (ride.status === 'canceled') {
+        paymentData.status = 'canceled';
       }
+
+      await Payment.create(paymentData);
     }
+
 
     console.log('Seed completed! Example data inserted.');
   } catch (e) {

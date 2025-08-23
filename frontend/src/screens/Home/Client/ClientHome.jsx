@@ -13,6 +13,14 @@ import { dateFormatter, getUserReadableRideStatus } from "../../../utils";
 
 import { MapContainer, TileLayer, Marker, Polyline, Rectangle, useMapEvents } from "react-leaflet";
 import L from "leaflet";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
+function showNotification(msg) {
+  toast.error(msg, { position: "top-right", autoClose: 5000 });
+}
+
 
 //Marker icons 
 const pickupIcon = new L.Icon({
@@ -83,23 +91,39 @@ function ClientHome() {
   const { user } = useAuth();
   const [activeRide, setActiveRide] = useState();
 
+  const [shownCancellationIds, setShownCancellationIds] = useState(new Set());
+  const shownCancellationIdsRef = useRef(shownCancellationIds);
+
+  useEffect(() => {
+    shownCancellationIdsRef.current = shownCancellationIds;
+  }, [shownCancellationIds]);
+
   useEffect(() => {
     const interval = setInterval(() => {
-      getActiveRide(user).then((ride) => setActiveRide(ride));
+      getActiveRide(user, shownCancellationIdsRef.current, setShownCancellationIds)
+        .then((ride) => setActiveRide(ride));
     }, 1000);
+
     return () => clearInterval(interval);
   }, [user]);
 
   const onRideCancel = () => {
     setActiveRide(undefined);
-    getActiveRide(user).then((ride) => setActiveRide(ride));
+    getActiveRide(user, shownCancellationIdsRef.current, setShownCancellationIds)
+      .then((ride) => setActiveRide(ride));
   };
 
   if (activeRide) {
     return <ActiveRideScreen ride={activeRide} user={user} onCancel={onRideCancel} />;
   }
-  return <RequestRideScreen user={user} setActiveRide={setActiveRide} />;
+  return (
+    <>
+      <RequestRideScreen user={user} setActiveRide={setActiveRide} />
+      <ToastContainer />
+    </>
+  );
 }
+
 
 function ActiveRideScreen({ ride, user, onCancel }) {
   const cancelRide = async () => {
@@ -124,19 +148,21 @@ function ActiveRideScreen({ ride, user, onCancel }) {
 
 function RequestRideScreen({ user, setActiveRide }) {
   // Pola / aktywne pole
-  const [activeField, setActiveField] = useState("pickup"); // 'pickup' | 'destination'
+  const [activeField, setActiveField] = useState("pickup"); 
   const [pickupAddress, setPickupAddress] = useState("");
   const [destAddress, setDestAddress] = useState("");
-  const [pickupCoords, setPickupCoords] = useState(null); // {lat, lng}
+  const [pickupCoords, setPickupCoords] = useState(null);
   const [destCoords, setDestCoords] = useState(null);
 
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
   const [destSuggestions, setDestSuggestions] = useState([]);
-  const [routeLine, setRouteLine] = useState([]); // [ [lat, lng], ... ]
+  const [routeLine, setRouteLine] = useState([]);
   const [distanceM, setDistanceM] = useState(null);
   const [durationS, setDurationS] = useState(null);
   const [amount, setAmount] = useState(null);
   const [error, setError] = useState("");
+
+  const [paymentMethod, setPaymentMethod] = useState("card");
 
   // Granice mapy 
   const maxBounds = useMemo(
@@ -224,7 +250,7 @@ function RequestRideScreen({ user, setActiveRide }) {
   const onRequest = async (e) => {
     e.preventDefault();
     setError("");
-    try {
+    try { 
       if (!pickupCoords || !destCoords || !pickupAddress || !destAddress) {
         setError("Please select both addresses.");
         return;
@@ -234,7 +260,8 @@ function RequestRideScreen({ user, setActiveRide }) {
         pickupAddress,
         destAddress,
         pickupCoords,
-        destCoords
+        destCoords,
+        paymentMethod 
       );
       setActiveRide(response.ride);
     } catch (e) {
@@ -242,7 +269,7 @@ function RequestRideScreen({ user, setActiveRide }) {
     }
   };
 
-  // formatki
+
   const durationMin = durationS != null ? Math.round(durationS / 60) : null;
   const distanceKm = distanceM != null ? (distanceM / 1000).toFixed(2) : null;
 
@@ -253,7 +280,6 @@ function RequestRideScreen({ user, setActiveRide }) {
 
       <form className="ride-form" onSubmit={onRequest}>
         <div className="ride-request-form">
-          {/* WAŻNE: activeField na WRAPPERZE, bo InputField nie przyjmuje onFocus/onMouseDown */}
           <div
             className="input-with-suggestions"
             onMouseDown={() => setActiveField("pickup")}
@@ -300,6 +326,18 @@ function RequestRideScreen({ user, setActiveRide }) {
             )}
           </div>
         </div>
+        
+        <div className="payment-method">
+          <label htmlFor="payment">Payment method:</label>
+          <select
+            id="payment"
+            value={paymentMethod}
+            onChange={(e) => setPaymentMethod(e.target.value)}
+          >
+            <option value="card">Card</option>
+            <option value="cash">Cash</option>
+          </select>
+        </div>
 
         <div className="map-wrapper">
           <MapContainer
@@ -311,10 +349,8 @@ function RequestRideScreen({ user, setActiveRide }) {
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-            {/* ClickPicker z refem do activeField */}
             <ClickPicker activeField={activeField} onPick={handlePickOnMap} />
 
-            {/* Prostokąt ograniczający (wizualnie) */}
             <Rectangle bounds={maxBounds} pathOptions={{ weight: 1 }} />
 
             {pickupCoords && <Marker position={pickupCoords} icon={pickupIcon} />}
@@ -342,13 +378,38 @@ function RequestRideScreen({ user, setActiveRide }) {
   );
 }
 
-async function getActiveRide(user) {
+async function getActiveRide(user, shownCancellationIds, setShownCancellationIds) {
   const rides = await sendGetRideHistoryRequest(user);
+
+  for (const ride of rides) {
+    if (ride.status === "canceled" && ride.cancellation_reason && !shownCancellationIds.has(ride.id)) {
+      switch (ride.cancellation_reason) {
+        case "no_driver":
+          showNotification("❌ Your ride was canceled because no drivers were available.");
+          break;
+        case "driver_cancelled":
+          showNotification("❌ Your driver canceled the ride.");
+          break;
+        case "client_no_show":
+          showNotification("❌ Ride canceled: you did not show up.");
+          break;
+        default:
+          showNotification("❌ Ride was canceled.");
+      }
+      setShownCancellationIds(prev => new Set(prev).add(ride.id));
+    }
+  }
+
   for (const ride of rides) {
     if (ride.status !== "completed" && ride.status !== "canceled") {
       return ride;
     }
   }
+
+  return undefined;
 }
+
+
+
 
 export default ClientHome;

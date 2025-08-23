@@ -13,4 +13,6 @@ router.put('/cancel/:id', auth, ridesController.cancelRide);
 router.post('/accept/:id', auth, ridesController.acceptRide);
 router.post('/reject/:id', auth, ridesController.rejectRide);
 router.post('/complete/:id', auth, ridesController.completeRide);
+router.put('/:id/cancel-by-driver-after-accept', auth, ridesController.cancelByDriverAfterAccept);
+router.put('/:id/cancel-by-driver-no-show', auth, ridesController.cancelByDriverNoShow);
 module.exports = router;
