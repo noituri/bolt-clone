@@ -29,7 +29,7 @@ module.exports = {
             await user.save();
             res.status(200).json({ message: 'Profile updated successfully' });
         } catch (err) {
-            res.status(400).json({ error: 'Invalid data' });
+            res.status(500).json({ error: 'Server error' });
         }
     }
 };
