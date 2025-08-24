@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import PrimaryButton from "../../components/PrimaryButton";
-import { dateFormatter, getUserReadableRideStatus } from "../../utils";
+import { dateFormatter } from "../../utils";
 import {
     sendGetAvailableRidesRequest,
     sendGetAssignedRidesRequest,
     sendAcceptRideRequest,
     sendRejectRideRequest,
-    sendCompleteRideRequest, // <— NOWE
+    sendCompleteRideRequest,
+    sendCancelByDriverNoShowRequest,
+    sendCancelByDriverAfterAcceptRequest,
 } from "../../api/rides";
 import "./DriverHome.css";
 
@@ -76,6 +78,30 @@ export default function DriverHome() {
         }
     };
 
+    const onNoShow = async (id) => {
+        try {
+            setBusy(true);
+            await sendCancelByDriverNoShowRequest(user, id);
+            await refresh();
+        } catch (e) {
+            setError(e.message || "No-show failed");
+        } finally {
+            setBusy(false);
+        }
+    };
+
+    const onCancelAfterAccept = async (id) => {
+        try {
+            setBusy(true);
+            await sendCancelByDriverAfterAcceptRequest(user, id);
+            await refresh();
+        } catch (e) {
+            setError(e.message || "Cancel failed");
+        } finally {
+            setBusy(false);
+        }
+    };
+
     return (
         <div className="driver-container">
             {error && <div className="driver-alert">{error}</div>}
@@ -108,13 +134,9 @@ export default function DriverHome() {
                                         <PrimaryButton disabled={busy} onClick={() => onAccept(r.id)}>
                                             Accept
                                         </PrimaryButton>
-                                        <button
-                                            className="driver-secondary"
-                                            disabled={busy}
-                                            onClick={() => onReject(r.id)}
-                                        >
+                                        <PrimaryButton disabled={busy} onClick={() => onReject(r.id)}>
                                             Reject
-                                        </button>
+                                        </PrimaryButton>
                                     </div>
                                 </div>
                             </li>
@@ -125,42 +147,54 @@ export default function DriverHome() {
 
             <section className="driver-section">
                 <h2 className="driver-h2">Assigned / Active</h2>
-                {assigned.length === 0 ? (
-                    <div className="driver-empty">No assigned rides.</div>
+
+                {assigned.filter((r) => r.status === "accepted").length === 0 ? (
+                    <div className="driver-empty">active</div>
                 ) : (
                     <ul className="driver-list">
-                        {assigned.map((r) => (
-                            <li key={r.id} className="driver-card">
-                                <div className="driver-row">
-                                    <div className="driver-main">
-                                        <div className="driver-route">
-                                            <span className="driver-address">{r.from_address || "-"}</span>
-                                            <span className="driver-arrow">→</span>
-                                            <span className="driver-address">{r.to_address || "-"}</span>
+                        {assigned
+                            .filter((r) => r.status === "accepted")
+                            .map((r) => (
+                                <li key={r.id} className="driver-card">
+                                    <div className="driver-row">
+                                        <div className="driver-main">
+                                            <div className="driver-route">
+                                                <span className="driver-address">{r.from_address || "-"}</span>
+                                                <span className="driver-arrow">→</span>
+                                                <span className="driver-address">{r.to_address || "-"}</span>
+                                            </div>
+                                            <div className="driver-meta">
+                        <span className="driver-date">
+                          {r.requested_at ? dateFormatter.format(new Date(r.requested_at)) : "-"}
+                        </span>
+                                                <span className="driver-price">
+                          {r.amount != null ? `${r.amount} PLN` : "-"}
+                        </span>
+                                            </div>
                                         </div>
-                                        <div className="driver-meta">
-                      <span className="driver-status">
-                        {getUserReadableRideStatus(r.status)}
-                      </span>
-                                            <span className="driver-date">
-                        {r.requested_at ? dateFormatter.format(new Date(r.requested_at)) : "-"}
-                      </span>
-                                            <span className="driver-price">
-                        {r.amount != null ? `${r.amount} PLN` : "-"}
-                      </span>
-                                        </div>
-                                    </div>
 
-                                    <div className="driver-actions">
-                                        {r.status === "accepted" && (
+                                        <div className="driver-actions driver-actions-column">
                                             <PrimaryButton disabled={busy} onClick={() => onComplete(r.id)}>
                                                 Complete
                                             </PrimaryButton>
-                                        )}
+                                            <PrimaryButton
+                                                disabled={busy}
+                                                onClick={() => onNoShow(r.id)}
+                                                className="danger"
+                                            >
+                                                Client no-show
+                                            </PrimaryButton>
+                                            <PrimaryButton
+                                                disabled={busy}
+                                                onClick={() => onCancelAfterAccept(r.id)}
+                                                className="danger"
+                                            >
+                                                Cancel ride
+                                            </PrimaryButton>
+                                        </div>
                                     </div>
-                                </div>
-                            </li>
-                        ))}
+                                </li>
+                            ))}
                     </ul>
                 )}
             </section>

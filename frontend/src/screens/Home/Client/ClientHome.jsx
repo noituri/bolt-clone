@@ -15,11 +15,19 @@ import { MapContainer, TileLayer, Marker, Polyline, Rectangle, useMapEvents } fr
 import L from "leaflet";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SelectBox from "../../../components/SelectBox";
 
 
+const NOTIFY_ID = "ride-alert";
 function showNotification(msg) {
-  toast.error(msg, { position: "top-right", autoClose: 5000 });
+  toast.dismiss(); // usuń wszystko, co jest na ekranie
+  toast.error(msg, {
+    position: "top-right",
+    autoClose: 5000,
+    toastId: NOTIFY_ID,
+  });
 }
+
 
 
 //Marker icons 
@@ -119,7 +127,8 @@ function ClientHome() {
   return (
     <>
       <RequestRideScreen user={user} setActiveRide={setActiveRide} />
-      <ToastContainer />
+      <ToastContainer position="top-right" newestOnTop limit={1} />
+
     </>
   );
 }
@@ -326,18 +335,17 @@ function RequestRideScreen({ user, setActiveRide }) {
             )}
           </div>
         </div>
-        
-        <div className="payment-method">
-          <label htmlFor="payment">Payment method:</label>
-          <select
-            id="payment"
+
+        <SelectBox
+            label="Payment method"
             value={paymentMethod}
-            onChange={(e) => setPaymentMethod(e.target.value)}
-          >
-            <option value="card">Card</option>
-            <option value="cash">Cash</option>
-          </select>
-        </div>
+            onChange={setPaymentMethod}
+        >
+          <option value="card">Card</option>
+          <option value="cash">Cash</option>
+        </SelectBox>
+
+
 
         <div className="map-wrapper">
           <MapContainer
@@ -381,33 +389,37 @@ function RequestRideScreen({ user, setActiveRide }) {
 async function getActiveRide(user, shownCancellationIds, setShownCancellationIds) {
   const rides = await sendGetRideHistoryRequest(user);
 
+  let latestMsg = null;
+
   for (const ride of rides) {
     if (ride.status === "canceled" && ride.cancellation_reason && !shownCancellationIds.has(ride.id)) {
       switch (ride.cancellation_reason) {
         case "no_driver":
-          showNotification("❌ Your ride was canceled because no drivers were available.");
+          latestMsg = "❌ Your ride was canceled because no drivers were available.";
           break;
         case "driver_cancelled":
-          showNotification("❌ Your driver canceled the ride.");
+          latestMsg = "❌ Your driver canceled the ride.";
           break;
         case "client_no_show":
-          showNotification("❌ Ride canceled: you did not show up.");
+          latestMsg = "❌ Ride canceled: you did not show up.";
           break;
         default:
-          showNotification("❌ Ride was canceled.");
+          latestMsg = "❌ Ride was canceled.";
       }
       setShownCancellationIds(prev => new Set(prev).add(ride.id));
     }
   }
+
+  if (latestMsg) showNotification(latestMsg);
 
   for (const ride of rides) {
     if (ride.status !== "completed" && ride.status !== "canceled") {
       return ride;
     }
   }
-
   return undefined;
 }
+
 
 
 

@@ -112,3 +112,19 @@ export async function sendCompleteRideRequest(user, rideId) {
   });
   return await getJsonData(resp);
 }
+
+export async function sendCancelByDriverNoShowRequest(user, rideId) {
+  const resp = await fetch(`${ENDPOINT}/${rideId}/cancel-by-driver-no-show`, {
+    method: "PUT",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}
+
+export async function sendCancelByDriverAfterAcceptRequest(user, rideId) {
+  const resp = await fetch(`${ENDPOINT}/${rideId}/cancel-by-driver-after-accept`, {
+    method: "PUT",
+    headers: { authorization: `Bearer ${user.token}` },
+  });
+  return await getJsonData(resp);
+}

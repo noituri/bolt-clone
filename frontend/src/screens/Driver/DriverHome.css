@@ -1,13 +1,12 @@
 :root {
     --driver-bg: #ffffff;
-    --driver-text: #111827; /* near-black */
-    --driver-muted: #6b7280; /* gray-500 */
-    --driver-border: #e5e7eb; /* gray-200 */
+    --driver-text: #111827;
+    --driver-muted: #6b7280;
+    --driver-border: #e5e7eb;
     --driver-surface: #ffffff;
-    --driver-surface-alt: #f9fafb; /* gray-50 */
-    --driver-accent: #2563eb; /* blue-600 (used in PrimaryButton maybe) */
-    --driver-chip: #eef2ff; /* indigo-50 */
-    --driver-chip-text: #3730a3; /* indigo-800 */
+    --driver-surface-alt: #f9fafb;
+    --driver-chip: #eef2ff;
+    --driver-chip-text: #3730a3;
     --driver-danger: #b91c1c;
 }
 
@@ -20,9 +19,9 @@
 }
 
 .driver-alert {
-    background: #fff7ed;        /* orange-50 */
-    color: #9a3412;             /* orange-800 */
-    border: 1px solid #fed7aa;  /* orange-200 */
+    background: #fff7ed;
+    color: #9a3412;
+    border: 1px solid #fed7aa;
     padding: 10px 12px;
     border-radius: 10px;
     margin: 8px 0 16px;
@@ -59,12 +58,12 @@
     border: 1px solid var(--driver-border);
     border-radius: 14px;
     padding: 12px;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.03);
 }
 
 .driver-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto; /* <= ważne: pozwala się kurczyć */
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
 }
@@ -72,7 +71,7 @@
 .driver-main {
     display: grid;
     gap: 8px;
-    min-width: 0; /* ellipsis działa w gridzie */
+    min-width: 0;
 }
 
 .driver-route {
@@ -81,7 +80,7 @@
     gap: 8px;
     font-weight: 600;
     color: var(--driver-text);
-    min-width: 0; /* kluczowe dla ellipsis */
+    min-width: 0;
 }
 
 .driver-address {
@@ -89,7 +88,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     min-width: 0;
-    max-width: 46vw;      /* przytnij bardzo długie adresy */
+    max-width: 46vw;
     overflow-wrap: anywhere;
 }
 
@@ -114,74 +113,62 @@
     font-weight: 700;
 }
 
-.driver-status {
-    background: var(--driver-surface-alt);
-    border: 1px solid var(--driver-border);
-    color: var(--driver-text);
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-weight: 600;
-}
-
-.driver-date {
-    opacity: 0.9;
-}
-
 .driver-actions {
     display: flex;
     gap: 10px;
     justify-content: flex-end;
-    flex-wrap: wrap; /* guziki nie wypychają layoutu */
-}
-
-.driver-secondary {
-    background: #ffffff;
-    color: var(--driver-text);
-    border: 1px solid var(--driver-border);
-    padding: 8px 12px;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: transform 0.05s ease-in-out, background 0.2s ease-in-out;
-}
-.driver-secondary:hover {
-    background: var(--driver-surface-alt);
-}
-.driver-secondary:active {
-    transform: translateY(1px);
-}
-.driver-secondary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Responsive */
-@media (max-width: 720px) {
-    .driver-row {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-    .driver-actions {
-        justify-content: stretch;
-    }
-    .driver-actions > * {
-        flex: 1;
-    }
-    .driver-address {
-        max-width: 100%;
-    }
-    .driver-route {
-        flex-wrap: wrap;
-    }
-}
-.driver-actions {
-    display: flex;
-    gap: 0.5rem;
-    flex-shrink: 0;       /* ⬅️ zapobiega ściskaniu przycisków */
+    flex-wrap: wrap;
+    flex-shrink: 0;
     align-items: center;
 }
 
 .driver-actions button,
 .driver-actions .primary-button {
-    min-width: 100px;     /* ⬅️ zapewnia, że cały napis się zmieści */
+    min-width: 100px;
     flex-shrink: 0;
+}
+
+.driver-actions-column {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.primary-button.danger {
+    background: var(--driver-danger);
+    color: #fff;
+    white-space: nowrap;
+    padding: 10px 16px;
+}
+
+.primary-button.danger:hover {
+    background: #991b1b;
+}
+
+.primary-button.danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+    .driver-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .driver-actions {
+        justify-content: stretch;
+    }
+
+    .driver-actions > * {
+        flex: 1;
+    }
+
+    .driver-address {
+        max-width: 100%;
+    }
+
+    .driver-route {
+        flex-wrap: wrap;
+    }
 }

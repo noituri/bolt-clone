@@ -1,6 +1,5 @@
-import {useEffect} from "react";
-import {useAuth} from "../../hooks/useAuth";
-import {useState} from "react";
+import { useEffect, useState } from "react";
+import { useAuth } from "../../hooks/useAuth";
 import {
     sendGetProfileRequest,
     sendUpdateProfileRequest,
@@ -8,12 +7,11 @@ import {
 import Navbar from "../../components/Navbar";
 import InputField from "../../components/InputField";
 import PrimaryButton from "../../components/PrimaryButton";
-import {dateFormatter} from "../../utils";
+import { dateFormatter } from "../../utils";
 import "./Profile.css";
-import {useNavigate} from "react-router-dom";
-import {sendChangePasswordRequest} from "../../api/auth";
+import { useNavigate } from "react-router-dom";
+import { sendChangePasswordRequest } from "../../api/auth";
 import FieldError from "../../components/FieldError";
-
 
 function validatePhonePL(value) {
     if (!value || typeof value !== "string") return "Enter phone number";
@@ -24,22 +22,21 @@ function validatePhonePL(value) {
     return "Enter the number in the format of 9 digits (e.g. 501234567) or +48XXXXXXXXX";
 }
 
-function Profile() {
-    const {user} = useAuth();
+export default function Profile() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     const [profile, setProfile] = useState();
     const [fullName, setFullName] = useState();
     const [phone, setPhone] = useState();
-
     const [didSave, setDidSave] = useState(false);
 
-    const navigate = useNavigate();
     const isProfileCreator = !profile || !profile.full_name || !profile.phone;
 
-    const syncProfileWithState = (newProfile) => {
-        setProfile(newProfile);
-        setFullName(newProfile.full_name);
-        setPhone(newProfile.phone);
+    const syncProfileWithState = (p) => {
+        setProfile(p);
+        setFullName(p.full_name);
+        setPhone(p.phone);
     };
 
     const [oldPassword, setOldPassword] = useState("");
@@ -48,7 +45,7 @@ function Profile() {
     const [pwdMsg, setPwdMsg] = useState("");
     const [pwdLoading, setPwdLoading] = useState(false);
 
-    const [errors, setErrors] = useState({fullName: "", phone: "", global: ""});
+    const [errors, setErrors] = useState({ fullName: "", phone: "", global: "" });
     const [saving, setSaving] = useState(false);
 
     const validateAll = () => {
@@ -73,34 +70,22 @@ function Profile() {
         return () => clearTimeout(timeout);
     }, [didSave]);
 
-    const handleProfileUpdate = async () => {
-        await sendUpdateProfileRequest(user, {
-            full_name: fullName,
-            phone,
-        });
-
-        if (isProfileCreator) {
-            navigate("/", {replace: true});
-        } else {
-            const updatedProfile = await sendGetProfileRequest(user);
-            syncProfileWithState(updatedProfile);
-            setDidSave(true);
-        }
-    };
-
     if (!profile) {
         return <h1>Loading</h1>;
     }
 
     return (
         <>
-            {!isProfileCreator && <Navbar active="Profile"/>}
+            {!isProfileCreator && <Navbar active="Profile" />}
             <h2>{isProfileCreator ? "Create profile" : "Profile"}</h2>
+
+            {}
             <form
                 className="profile-form"
                 onSubmit={async (e) => {
                     e.preventDefault();
-                    await handleProfileUpdate();
+                    setErrors((p) => ({ ...p, global: "" }));
+                    setDidSave(false);
 
                     if (!validateAll()) return;
 
@@ -111,8 +96,8 @@ function Profile() {
                         if (isProfileCreator) {
                             navigate("/", { replace: true });
                         } else {
-                            const updatedProfile = await sendGetProfileRequest(user);
-                            syncProfileWithState(updatedProfile);
+                            const updated = await sendGetProfileRequest(user);
+                            syncProfileWithState(updated);
                             setDidSave(true);
                         }
                     } catch (err) {
@@ -181,15 +166,16 @@ function Profile() {
                 {didSave && <h2 className="form-success">Saved</h2>}
             </form>
 
+            <hr className="profile-divider" />
 
-            <hr className="profile-divider"/>
-
+            {}
             <h3>Change password</h3>
             <form
                 className="profile-form"
                 onSubmit={async (e) => {
                     e.preventDefault();
                     setPwdMsg("");
+
                     if (!oldPassword || !newPassword) {
                         setPwdMsg("Fill in both password fields.");
                         return;
@@ -198,6 +184,7 @@ function Profile() {
                         setPwdMsg("New password and confirmation do not match.");
                         return;
                     }
+
                     try {
                         setPwdLoading(true);
                         const resp = await sendChangePasswordRequest(user, oldPassword, newPassword);
@@ -233,13 +220,13 @@ function Profile() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                 />
+
                 <PrimaryButton type="submit" disabled={pwdLoading}>
                     {pwdLoading ? "Changing..." : "Change password"}
                 </PrimaryButton>
+
                 {pwdMsg && <p>{pwdMsg}</p>}
             </form>
         </>
     );
 }
-
-export default Profile;

@@ -69,7 +69,6 @@ function UserScreen() {
     e.preventDefault();
     setFormError("");
 
-    // validate phone before saving
     const err = validatePhonePL(phone);
     if (err) {
       setPhoneError(err);
