@@ -42,7 +42,7 @@ function HistoryEntry({ entry }) {
   return (
     <tr className="ride-history-entry">
       <td>
-        {entry.from_address} -&gt; {entry.to_address}
+        <span className="limit-text">{entry.from_address}</span> -&gt; <span className="limit-text">{entry.to_address}</span>
       </td>
       <td>{dateFormatter.format(new Date(entry.requested_at))}</td>
       <td>${entry.amount}</td>

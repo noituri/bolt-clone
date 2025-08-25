@@ -133,7 +133,6 @@ function ClientHome() {
   );
 }
 
-
 function ActiveRideScreen({ ride, user, onCancel }) {
   const cancelRide = async () => {
     await sendCancelRideRequest(user, ride.id);
@@ -145,7 +144,7 @@ function ActiveRideScreen({ ride, user, onCancel }) {
       <div className="active-ride-card">
         <h1>Your ride</h1>
         <p>
-          {ride.from_address} -&gt; {ride.to_address}{" "}
+          <span className="limit-text">{ride.from_address}</span> -&gt; <span className="limit-text">{ride.to_address}</span>
         </p>
         <p>Requested at {dateFormatter.format(new Date(ride.requested_at))}</p>
         <p>{getUserReadableRideStatus(ride.status)}</p>

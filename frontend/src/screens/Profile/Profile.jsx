@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import {
-    sendGetProfileRequest,
-    sendUpdateProfileRequest,
+  sendGetProfileRequest,
+  sendUpdateProfileRequest,
 } from "../../api/user";
 import Navbar from "../../components/Navbar";
 import InputField from "../../components/InputField";
@@ -14,219 +14,225 @@ import { sendChangePasswordRequest } from "../../api/auth";
 import FieldError from "../../components/FieldError";
 
 function validatePhonePL(value) {
-    if (!value || typeof value !== "string") return "Enter phone number";
-    const v = value.replace(/[ -]/g, "");
-    const e164PL = /^\+48\d{9}$/;
-    const nationalPL = /^\d{9}$/;
-    if (e164PL.test(v) || nationalPL.test(v)) return null;
-    return "Enter the number in the format of 9 digits (e.g. 501234567) or +48XXXXXXXXX";
+  if (!value || typeof value !== "string") return "Enter phone number";
+  const v = value.replace(/[ -]/g, "");
+  const e164PL = /^\+48\d{9}$/;
+  const nationalPL = /^\d{9}$/;
+  if (e164PL.test(v) || nationalPL.test(v)) return null;
+  return "Enter the number in the format of 9 digits (e.g. 501234567) or +48XXXXXXXXX";
 }
 
 export default function Profile() {
-    const { user } = useAuth();
-    const navigate = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-    const [profile, setProfile] = useState();
-    const [fullName, setFullName] = useState();
-    const [phone, setPhone] = useState();
-    const [didSave, setDidSave] = useState(false);
+  const [profile, setProfile] = useState();
+  const [fullName, setFullName] = useState();
+  const [phone, setPhone] = useState();
+  const [didSave, setDidSave] = useState(false);
 
-    const isProfileCreator = !profile || !profile.full_name || !profile.phone;
+  const isProfileCreator = !profile || !profile.full_name || !profile.phone;
 
-    const syncProfileWithState = (p) => {
-        setProfile(p);
-        setFullName(p.full_name);
-        setPhone(p.phone);
-    };
+  const syncProfileWithState = (p) => {
+    setProfile(p);
+    setFullName(p.full_name);
+    setPhone(p.phone);
+  };
 
-    const [oldPassword, setOldPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [pwdMsg, setPwdMsg] = useState("");
-    const [pwdLoading, setPwdLoading] = useState(false);
+  const [errors, setErrors] = useState({ fullName: "", phone: "", global: "" });
+  const [saving, setSaving] = useState(false);
 
-    const [errors, setErrors] = useState({ fullName: "", phone: "", global: "" });
-    const [saving, setSaving] = useState(false);
-
-    const validateAll = () => {
-        const next = { fullName: "", phone: "", global: "" };
-        if (!fullName || fullName.trim().length < 3) {
-            next.fullName = "Full name must be at least 3 characters long";
-        }
-        const phoneErr = validatePhonePL(phone);
-        if (phoneErr) next.phone = phoneErr;
-
-        setErrors(next);
-        return !next.fullName && !next.phone;
-    };
-
-    useEffect(() => {
-        document.title = "Profile";
-        sendGetProfileRequest(user).then(syncProfileWithState);
-    }, [user]);
-
-    useEffect(() => {
-        const timeout = setTimeout(() => setDidSave(false), 2000);
-        return () => clearTimeout(timeout);
-    }, [didSave]);
-
-    if (!profile) {
-        return <h1>Loading</h1>;
+  const validateAll = () => {
+    const next = { fullName: "", phone: "", global: "" };
+    if (!fullName || fullName.trim().length < 3) {
+      next.fullName = "Full name must be at least 3 characters long";
     }
+    const phoneErr = validatePhonePL(phone);
+    if (phoneErr) next.phone = phoneErr;
 
-    return (
-        <>
-            {!isProfileCreator && <Navbar active="Profile" />}
-            <h2>{isProfileCreator ? "Create profile" : "Profile"}</h2>
+    setErrors(next);
+    return !next.fullName && !next.phone;
+  };
 
-            {}
-            <form
-                className="profile-form"
-                onSubmit={async (e) => {
-                    e.preventDefault();
-                    setErrors((p) => ({ ...p, global: "" }));
-                    setDidSave(false);
+  useEffect(() => {
+    document.title = "Profile";
+    sendGetProfileRequest(user).then(syncProfileWithState);
+  }, [user]);
 
-                    if (!validateAll()) return;
+  useEffect(() => {
+    const timeout = setTimeout(() => setDidSave(false), 2000);
+    return () => clearTimeout(timeout);
+  }, [didSave]);
 
-                    try {
-                        setSaving(true);
-                        await sendUpdateProfileRequest(user, { full_name: fullName, phone });
+  if (!profile) {
+    return <h1>Loading</h1>;
+  }
 
-                        if (isProfileCreator) {
-                            navigate("/", { replace: true });
-                        } else {
-                            const updated = await sendGetProfileRequest(user);
-                            syncProfileWithState(updated);
-                            setDidSave(true);
-                        }
-                    } catch (err) {
-                        setErrors((p) => ({
-                            ...p,
-                            global: err?.message || "Failed to save changes.",
-                        }));
-                    } finally {
-                        setSaving(false);
-                    }
-                }}
-            >
-                {errors.global && <div className="form-error-global">{errors.global}</div>}
+  return (
+    <>
+      {!isProfileCreator && <Navbar active="Profile" />}
+      <h2>{isProfileCreator ? "Create profile" : "Profile"}</h2>
 
-                <div className="form-field">
-                    <InputField
-                        placeholder="Username"
-                        name="username"
-                        value={profile.username}
-                        disabled
-                    />
-                </div>
+      {}
+      <form
+        className="profile-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setErrors((p) => ({ ...p, global: "" }));
+          setDidSave(false);
 
-                <div className="form-field">
-                    <InputField
-                        placeholder="Full name"
-                        name="full-name"
-                        value={fullName ?? ""}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className={errors.fullName ? "input-invalid" : ""}
-                        onBlur={() =>
-                            setErrors((p) => ({
-                                ...p,
-                                fullName:
-                                    !fullName || fullName.trim().length < 3
-                                        ? "Full name must be at least 3 characters long"
-                                        : "",
-                            }))
-                        }
-                    />
-                    <FieldError>{errors.fullName}</FieldError>
-                </div>
+          if (!validateAll()) return;
 
-                <div className="form-field">
-                    <InputField
-                        type="tel"
-                        placeholder="Phone"
-                        name="phone"
-                        value={phone ?? ""}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className={errors.phone ? "input-invalid" : ""}
-                        onBlur={() =>
-                            setErrors((p) => ({ ...p, phone: validatePhonePL(phone) || "" }))
-                        }
-                    />
-                    <FieldError>{errors.phone}</FieldError>
-                </div>
+          try {
+            setSaving(true);
+            await sendUpdateProfileRequest(user, { full_name: fullName, phone });
 
-                {!isProfileCreator && (
-                    <p>Account created at {dateFormatter.format(new Date(profile.created_at))}</p>
-                )}
+            if (isProfileCreator) {
+              navigate("/", { replace: true });
+            } else {
+              const updated = await sendGetProfileRequest(user);
+              syncProfileWithState(updated);
+              setDidSave(true);
+            }
+          } catch (err) {
+            setErrors((p) => ({
+              ...p,
+              global: err?.message || "Failed to save changes.",
+            }));
+          } finally {
+            setSaving(false);
+          }
+        }}
+      >
+        {errors.global && <div className="form-error-global">{errors.global}</div>}
 
-                <PrimaryButton type="submit" disabled={saving}>
-                    {saving ? "Saving..." : "Save"}
-                </PrimaryButton>
-                {didSave && <h2 className="form-success">Saved</h2>}
-            </form>
+        <div className="form-field">
+          <InputField
+            placeholder="Username"
+            name="username"
+            value={profile.username}
+            disabled
+          />
+        </div>
 
-            <hr className="profile-divider" />
+        <div className="form-field">
+          <InputField
+            placeholder="Full name"
+            name="full-name"
+            value={fullName ?? ""}
+            onChange={(e) => setFullName(e.target.value)}
+            className={errors.fullName ? "input-invalid" : ""}
+            onBlur={() =>
+              setErrors((p) => ({
+                ...p,
+                fullName:
+                  !fullName || fullName.trim().length < 3
+                    ? "Full name must be at least 3 characters long"
+                    : "",
+              }))
+            }
+          />
+          <FieldError>{errors.fullName}</FieldError>
+        </div>
 
-            {}
-            <h3>Change password</h3>
-            <form
-                className="profile-form"
-                onSubmit={async (e) => {
-                    e.preventDefault();
-                    setPwdMsg("");
+        <div className="form-field">
+          <InputField
+            type="tel"
+            placeholder="Phone"
+            name="phone"
+            value={phone ?? ""}
+            onChange={(e) => setPhone(e.target.value)}
+            className={errors.phone ? "input-invalid" : ""}
+            onBlur={() =>
+              setErrors((p) => ({ ...p, phone: validatePhonePL(phone) || "" }))
+            }
+          />
+          <FieldError>{errors.phone}</FieldError>
+        </div>
 
-                    if (!oldPassword || !newPassword) {
-                        setPwdMsg("Fill in both password fields.");
-                        return;
-                    }
-                    if (newPassword !== confirmPassword) {
-                        setPwdMsg("New password and confirmation do not match.");
-                        return;
-                    }
+        {!isProfileCreator && (
+          <p>Account created at {dateFormatter.format(new Date(profile.created_at))}</p>
+        )}
 
-                    try {
-                        setPwdLoading(true);
-                        const resp = await sendChangePasswordRequest(user, oldPassword, newPassword);
-                        setPwdMsg(resp?.message || "Password changed.");
-                        setOldPassword("");
-                        setNewPassword("");
-                        setConfirmPassword("");
-                    } catch (err) {
-                        setPwdMsg("Failed to change password.");
-                    } finally {
-                        setPwdLoading(false);
-                    }
-                }}
-            >
-                <InputField
-                    type="password"
-                    placeholder="Old password"
-                    name="old-password"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                />
-                <InputField
-                    type="password"
-                    placeholder="New password"
-                    name="new-password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                />
-                <InputField
-                    type="password"
-                    placeholder="Confirm new password"
-                    name="confirm-new-password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                />
+        <PrimaryButton type="submit" disabled={saving}>
+          {saving ? "Saving..." : "Save"}
+        </PrimaryButton>
+        {didSave && <h2 className="form-success">Saved</h2>}
+      </form>
 
-                <PrimaryButton type="submit" disabled={pwdLoading}>
-                    {pwdLoading ? "Changing..." : "Change password"}
-                </PrimaryButton>
+      <hr className="profile-divider" />
+      {!isProfileCreator && <PasswordChanger user={user} />}
+    </>
+  );
+}
 
-                {pwdMsg && <p>{pwdMsg}</p>}
-            </form>
-        </>
-    );
+function PasswordChanger({ user }) {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwdMsg, setPwdMsg] = useState("");
+  const [pwdLoading, setPwdLoading] = useState(false);
+
+  return (
+    <>
+      <h2>Change password</h2>
+      <form
+        className="profile-form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setPwdMsg("");
+
+          if (!oldPassword || !newPassword) {
+            setPwdMsg("Fill in both password fields.");
+            return;
+          }
+          if (newPassword !== confirmPassword) {
+            setPwdMsg("New password and confirmation do not match.");
+            return;
+          }
+
+          try {
+            setPwdLoading(true);
+            const resp = await sendChangePasswordRequest(user, oldPassword, newPassword);
+            setPwdMsg(resp?.message || "Password changed.");
+            setOldPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+          } catch (err) {
+            setPwdMsg("Failed to change password.");
+          } finally {
+            setPwdLoading(false);
+          }
+        }}
+      >
+        <InputField
+          type="password"
+          placeholder="Old password"
+          name="old-password"
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+        />
+        <InputField
+          type="password"
+          placeholder="New password"
+          name="new-password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+        />
+        <InputField
+          type="password"
+          placeholder="Confirm new password"
+          name="confirm-new-password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
+
+        <PrimaryButton type="submit" disabled={pwdLoading}>
+          {pwdLoading ? "Changing..." : "Change password"}
+        </PrimaryButton>
+
+        {pwdMsg && <p>{pwdMsg}</p>}
+      </form>
+    </>
+  )
 }
