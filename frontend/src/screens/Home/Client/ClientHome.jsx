@@ -156,7 +156,7 @@ function ActiveRideScreen({ ride, user, onCancel }) {
 
 function RequestRideScreen({ user, setActiveRide }) {
   // Pola / aktywne pole
-  const [activeField, setActiveField] = useState("pickup"); 
+  const [activeField, setActiveField] = useState("pickup");
   const [pickupAddress, setPickupAddress] = useState("");
   const [destAddress, setDestAddress] = useState("");
   const [pickupCoords, setPickupCoords] = useState(null);
@@ -258,7 +258,7 @@ function RequestRideScreen({ user, setActiveRide }) {
   const onRequest = async (e) => {
     e.preventDefault();
     setError("");
-    try { 
+    try {
       if (!pickupCoords || !destCoords || !pickupAddress || !destAddress) {
         setError("Please select both addresses.");
         return;
@@ -269,7 +269,7 @@ function RequestRideScreen({ user, setActiveRide }) {
         destAddress,
         pickupCoords,
         destCoords,
-        paymentMethod 
+        paymentMethod
       );
       setActiveRide(response.ride);
     } catch (e) {
@@ -336,15 +336,13 @@ function RequestRideScreen({ user, setActiveRide }) {
         </div>
 
         <SelectBox
-            label="Payment method"
-            value={paymentMethod}
-            onChange={setPaymentMethod}
+          label="Payment method"
+          value={paymentMethod}
+          onChange={setPaymentMethod}
         >
           <option value="card">Card</option>
           <option value="cash">Cash</option>
         </SelectBox>
-
-
 
         <div className="map-wrapper">
           <MapContainer
