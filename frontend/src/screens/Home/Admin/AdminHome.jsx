@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import PrimaryButton from "../../../components/PrimaryButton";
 
 function AdminHome() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
 
@@ -20,16 +20,16 @@ function AdminHome() {
 
   return (
     <>
-        <h2 style={{ textAlign: "center" }}>Users</h2>
-        <div style={{ textAlign: "center" }}>
-            <PrimaryButton
-                type="button"
-                onClick={() => navigate("/admin/users/new")}
-                className="center-button"
-            >
-                ➕ Add user
-            </PrimaryButton>
-        </div>
+      <h2 style={{ textAlign: "center" }}>Users</h2>
+      <div style={{ textAlign: "center" }}>
+        <PrimaryButton
+          type="button"
+          onClick={() => navigate("/admin/users/new")}
+          className="center-button"
+        >
+          ➕ Add user
+        </PrimaryButton>
+      </div>
 
       <table className="user-list">
 
@@ -53,7 +53,7 @@ function AdminHome() {
 function UserEntry({ entry }) {
   const navigate = useNavigate();
   return (
-    <tr className="user-list-entry" onClick={() => navigate(`/admin/user/${entry.id}`)}>
+    <tr className="user-list-entry" onClick={() => navigate(`/admin/users/${entry.id}`)}>
       <td>
         {entry.id}
       </td>

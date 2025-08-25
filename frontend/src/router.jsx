@@ -62,7 +62,7 @@ const router = createBrowserRouter([
         ),
         children: [
           {
-            path: "user/:id",
+            path: "users/:id",
             Component: UserScreen,
           },
           {
