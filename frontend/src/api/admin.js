@@ -88,7 +88,7 @@ export async function sendAdminChangePasswordRequest(user, userId, newPassword) 
   return await getJsonData(resp);
 }
 
-export async function createDriver(user, driverUserId, carMake, carModel, licensePlate) {
+export async function sendCreateDriverRequest(user, driverUserId, carMake, carModel, licensePlate) {
   const resp = await fetch(`${ENDPOINT}/drivers`, {
     method: "POST",
     headers: {
@@ -99,14 +99,14 @@ export async function createDriver(user, driverUserId, carMake, carModel, licens
       id: driverUserId,
       car_make: carMake,
       car_model: carModel,
-      license_plate: licensePlate,
+      car_plate: licensePlate,
     }),
   });
 
   return await getJsonData(resp);
 }
 
-export async function updateDriver(user, driverUserId, carMake, carModel, licensePlate) {
+export async function sendUpdateDriverRequest(user, driverUserId, carMake, carModel, licensePlate) {
   const resp = await fetch(`${ENDPOINT}/drivers/${driverUserId}`, {
     method: "PUT",
     headers: {
@@ -116,8 +116,20 @@ export async function updateDriver(user, driverUserId, carMake, carModel, licens
     body: JSON.stringify({
       car_make: carMake,
       car_model: carModel,
-      license_plate: licensePlate,
+      car_plate: licensePlate,
     }),
+  });
+
+  return await getJsonData(resp);
+}
+
+export async function sendGetDriverRequest(user, driverUserId) {
+  const resp = await fetch(`${ENDPOINT}/drivers/${driverUserId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      authorization: `Bearer ${user.token}`,
+    },
   });
 
   return await getJsonData(resp);

@@ -4,7 +4,7 @@ import Navbar from "../../../components/Navbar";
 import InputField from "../../../components/InputField";
 import SelectBox from "../../../components/SelectBox";
 import PrimaryButton from "../../../components/PrimaryButton";
-import { createDriver, sendAddUserRequest } from "../../../api/admin";
+import { sendCreateDriverRequest, sendAddUserRequest } from "../../../api/admin";
 import { AUTH_ROLE_ADMIN, AUTH_ROLE_CLIENT, AUTH_ROLE_DRIVER } from "../../../api/auth";
 import "./UserScreen.css";
 import { useNavigate } from "react-router-dom";
@@ -75,7 +75,7 @@ export default function NewUserScreen() {
       setSaving(true);
       const resp = await sendAddUserRequest(signedUser, username, password, role, fullName, phone);
       if (role === AUTH_ROLE_DRIVER) {
-        await createDriver(
+        await sendCreateDriverRequest(
           signedUser,
           resp.user_id,
           carMake,
@@ -163,7 +163,7 @@ export default function NewUserScreen() {
           <FieldError>{errors.phone}</FieldError>
         </div>
 
-        <SelectBox label="Rola:" onChange={setRole} value={role}>
+        <SelectBox label="Role:" onChange={setRole} value={role}>
           <option>{AUTH_ROLE_ADMIN}</option>
           <option>{AUTH_ROLE_DRIVER}</option>
           <option>{AUTH_ROLE_CLIENT}</option>
