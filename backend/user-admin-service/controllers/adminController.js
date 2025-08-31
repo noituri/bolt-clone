@@ -140,11 +140,11 @@ module.exports = {
 
     createDriver: async (req, res) => {
         try {
-            const { id, is_available, car_make, car_model, car_plate } = req.body;
+            const { id, car_make, car_model, car_plate } = req.body;
 
             const driver = await Driver.create({
                 id,
-                is_available,
+                is_available: true,
                 car_make,
                 car_model,
                 car_plate
@@ -160,7 +160,7 @@ module.exports = {
     updateDriver: async (req, res) => {
         try {
             const { id } = req.params;
-            const { is_available, car_make, car_model, car_plate } = req.body;
+            const { car_make, car_model, car_plate } = req.body;
 
             const driver = await Driver.findByPk(id);
             if (!driver) {
@@ -168,7 +168,6 @@ module.exports = {
             }
 
             await driver.update({
-                is_available,
                 car_make,
                 car_model,
                 car_plate
