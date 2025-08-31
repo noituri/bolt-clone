@@ -8,6 +8,7 @@ import {
   sendAdminChangePasswordRequest,
   sendGetDriverRequest,
   sendUpdateDriverRequest,
+  sendCreateDriverRequest,
 } from "../../../api/admin";
 import Navbar from "../../../components/Navbar";
 import InputField from "../../../components/InputField";
@@ -116,7 +117,12 @@ function UserScreen() {
     try {
       await sendUpdateUserRequest(signedUser, id, isActive, fullName, phone, role);
       if (role === AUTH_ROLE_DRIVER) {
-        await sendUpdateDriverRequest(signedUser, id, carMake, carModel, licensePlate);
+        // Update existing driver
+        if (user.role === AUTH_ROLE_DRIVER) {
+          await sendUpdateDriverRequest(signedUser, id, carMake, carModel, licensePlate);
+        } else {
+          await sendCreateDriverRequest(signedUser, id, carMake, carModel, licensePlate);
+        }
       }
       await sendGetUserRequest(signedUser, id).then(setUser);
       setDidSave(true);
