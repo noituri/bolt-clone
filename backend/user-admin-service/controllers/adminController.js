@@ -63,6 +63,14 @@ module.exports = {
       if (full_name !== undefined) user.full_name = full_name;
       if (phone !== undefined) user.phone = phone;
       if (role !== undefined && ['client', 'driver', 'admin'].includes(role)) {
+        if (user.role === "driver" && role != "driver") {
+          try {
+            const driver = await Driver.findByPk(id);
+            driver.destroy();
+          } catch {
+            console.error("Failed to delete driver");
+          }
+        }
         user.role = role;
       }
 
