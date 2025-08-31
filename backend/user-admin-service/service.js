@@ -10,9 +10,11 @@ app.use(express.json());
 
 const userRoutes = require('./routes/user');
 const adminRoutes = require('./routes/admin');
+const driverRoutes = require('./routes/driver');
 
 app.use('/users', userRoutes);
 app.use('/admin', adminRoutes);
+app.use('/drivers', driverRoutes);
 
 app.listen(port, () => {
     console.log(`User-Admin service running on port ${port}`);
